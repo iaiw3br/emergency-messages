@@ -11,6 +11,7 @@ import (
 	"github.com/emergency-messages/internal/store"
 	"github.com/emergency-messages/pkg/client/postgres"
 	"github.com/go-chi/chi/v5"
+	"github.com/jackc/pgx/v5"
 	"log"
 	"net/http"
 	"os"
@@ -51,10 +52,7 @@ func startServer(ctx context.Context) error {
 	}
 	defer db.Close(ctx)
 
-	userStore := store.NewUserStore(db)
-	userService := service.NewUserService(userStore, logging)
-	users := controller.NewUser(userService)
-	users.Register(r)
+	registerEntities(db, logging, r)
 
 	go func() {
 		if err = srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
@@ -89,4 +87,11 @@ func startServer(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+func registerEntities(db *pgx.Conn, l logging.Logger, r *chi.Mux) {
+	userStore := store.NewUserStore(db)
+	userService := service.NewUserService(userStore, l)
+	users := controller.NewUser(userService)
+	users.Register(r)
 }
