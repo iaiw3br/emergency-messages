@@ -49,7 +49,8 @@ func Test_getUsersFromCSV(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			data := bytes.NewBuffer([]byte(tt.args))
-			got, err := getUsersFromCSV(data)
+			u := UserService{}
+			got, err := u.getUsersFromCSV(data)
 			if tt.wantErr {
 				assert.Error(t, err)
 				return

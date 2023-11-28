@@ -5,6 +5,7 @@ import (
 	"encoding/csv"
 	"errors"
 	"fmt"
+	"github.com/emergency-messages/internal/logging"
 	"github.com/emergency-messages/internal/models"
 	"github.com/emergency-messages/internal/store"
 	"io"
@@ -15,29 +16,33 @@ const semicolon = ';'
 
 type UserService struct {
 	userStore store.UserStore
+	log       logging.Logger
 }
 
-func NewUserService(userStore store.UserStore) UserService {
+func NewUserService(userStore store.UserStore, log logging.Logger) UserService {
 	return UserService{
 		userStore: userStore,
+		log:       log,
 	}
 }
 
 func (u UserService) Upload(csvData io.Reader) error {
 	ctx := context.Background()
-	users, err := getUsersFromCSV(csvData)
+	users, err := u.getUsersFromCSV(csvData)
 	if err != nil {
+		u.log.Error(err)
 		return err
 	}
 	return u.userStore.CreateMany(ctx, users)
 }
 
-func getUsersFromCSV(csvData io.Reader) ([]models.User, error) {
+func (u UserService) getUsersFromCSV(csvData io.Reader) ([]models.User, error) {
 	csvReader := csv.NewReader(csvData)
 	csvReader.Comma = semicolon
 
 	records, err := csvReader.ReadAll()
 	if err != nil {
+		u.log.Error(err)
 		return nil, err
 	}
 
