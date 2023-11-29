@@ -15,11 +15,11 @@ const numberOfCSVCells = 4
 const semicolon = ';'
 
 type UserService struct {
-	userStore store.UserStore
+	userStore store.User
 	log       logging.Logger
 }
 
-func NewUserService(userStore store.UserStore, log logging.Logger) UserService {
+func NewUserService(userStore store.User, log logging.Logger) UserService {
 	return UserService{
 		userStore: userStore,
 		log:       log,

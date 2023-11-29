@@ -1,7 +1,8 @@
-package controller
+package handler
 
 import (
 	"fmt"
+	"github.com/emergency-messages/internal/logging"
 	"github.com/emergency-messages/internal/service"
 	"github.com/go-chi/chi/v5"
 	"net/http"
@@ -10,7 +11,8 @@ import (
 const users = "/users"
 
 type UserController struct {
-	UserService service.UserService
+	userService service.UserService
+	log         logging.Logger
 }
 
 func (u UserController) Register(r *chi.Mux) {
@@ -18,9 +20,10 @@ func (u UserController) Register(r *chi.Mux) {
 	r.Post(fmt.Sprintf("%s/upload", users), u.Upload)
 }
 
-func NewUser(userService service.UserService) UserController {
+func NewUser(userService service.UserService, log logging.Logger) UserController {
 	return UserController{
-		UserService: userService,
+		userService: userService,
+		log:         log,
 	}
 }
 
@@ -36,7 +39,7 @@ func (u UserController) Upload(w http.ResponseWriter, r *http.Request) {
 	}
 	defer file.Close()
 
-	err = u.UserService.Upload(file)
+	err = u.userService.Upload(file)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
