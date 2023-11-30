@@ -7,6 +7,7 @@ import (
 	"github.com/emergency-messages/internal/config"
 	"github.com/emergency-messages/internal/handler"
 	"github.com/emergency-messages/internal/logging"
+	mdlware "github.com/emergency-messages/internal/middleware"
 	"github.com/emergency-messages/internal/service"
 	"github.com/emergency-messages/internal/store"
 	"github.com/emergency-messages/pkg/client/postgres"
@@ -98,6 +99,7 @@ func registerEntities(db *pgx.Conn, l logging.Logger, r *chi.Mux) {
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
+	r.Use(mdlware.LimitRequests)
 
 	// Set a timeout value on the request context (ctx), that will signal
 	// through ctx.Done() that the request has timed out and further
