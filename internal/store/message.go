@@ -12,7 +12,12 @@ type Message struct {
 	log logging.Logger
 }
 
-func NewMessage(db *pgx.Conn, log logging.Logger) Message {
+type Messager interface {
+	Create(ctx context.Context, message models.Message) error
+	UpdateStatus(ctx context.Context, id uint64, status models.MessageStatus) error
+}
+
+func NewMessage(db *pgx.Conn, log logging.Logger) Messager {
 	return Message{
 		db:  db,
 		log: log,

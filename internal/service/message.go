@@ -11,13 +11,13 @@ import (
 )
 
 type MessageService struct {
-	messageStore  store.Message
-	templateStore store.Template
+	messageStore  store.Messager
+	templateStore store.Templater
 	userStore     store.User
 	log           logging.Logger
 }
 
-func NewMessage(messageStore store.Message, templateStore store.Template, userStore store.User, log logging.Logger) *MessageService {
+func NewMessage(messageStore store.Messager, templateStore store.Templater, userStore store.User, log logging.Logger) *MessageService {
 	return &MessageService{
 		messageStore:  messageStore,
 		templateStore: templateStore,

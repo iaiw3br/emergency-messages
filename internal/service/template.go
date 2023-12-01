@@ -9,11 +9,11 @@ import (
 )
 
 type Template struct {
-	templateStore store.Template
+	templateStore store.Templater
 	log           logging.Logger
 }
 
-func NewTemplate(templateStore store.Template, log logging.Logger) Template {
+func NewTemplate(templateStore store.Templater, log logging.Logger) Template {
 	return Template{
 		templateStore: templateStore,
 		log:           log,
