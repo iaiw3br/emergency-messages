@@ -5,12 +5,14 @@ import (
 	"errors"
 	"fmt"
 	"github.com/emergency-messages/internal/config"
-	"github.com/emergency-messages/internal/controller"
+	"github.com/emergency-messages/internal/handler"
 	"github.com/emergency-messages/internal/logging"
+	mdlware "github.com/emergency-messages/internal/middleware"
 	"github.com/emergency-messages/internal/service"
 	"github.com/emergency-messages/internal/store"
 	"github.com/emergency-messages/pkg/client/postgres"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/jackc/pgx/v5"
 	"log"
 	"net/http"
@@ -20,7 +22,10 @@ import (
 	"time"
 )
 
-var shutdownTimeout = 5 * time.Second
+var (
+	shutdownTimeout = 5 * time.Second
+	contextTimeout  = 60 * time.Second
+)
 
 func Run() {
 	if err := config.Load(); err != nil {
@@ -90,8 +95,29 @@ func startServer(ctx context.Context) error {
 }
 
 func registerEntities(db *pgx.Conn, l logging.Logger, r *chi.Mux) {
+	r.Use(middleware.RequestID)
+	r.Use(middleware.RealIP)
+	r.Use(middleware.Logger)
+	r.Use(middleware.Recoverer)
+	r.Use(mdlware.LimitRequests)
+
+	// Set a timeout value on the request context (ctx), that will signal
+	// through ctx.Done() that the request has timed out and further
+	// processing should be stopped.
+	r.Use(middleware.Timeout(contextTimeout))
+
 	userStore := store.NewUserStore(db)
 	userService := service.NewUserService(userStore, l)
-	users := controller.NewUser(userService)
-	users.Register(r)
+	userHandler := handler.NewUser(userService, l)
+	userHandler.Register(r)
+
+	templateStore := store.NewTemplate(db, l)
+	templateService := service.NewTemplate(templateStore, l)
+	templateHandler := handler.NewTemplate(templateService, l)
+	templateHandler.Register(r)
+
+	messageStore := store.NewMessage(db, l)
+	messageService := service.NewMessage(messageStore, templateStore, userStore, l)
+	messageHandler := handler.NewMessage(messageService, l)
+	messageHandler.Register(r)
 }
