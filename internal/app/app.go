@@ -51,7 +51,7 @@ func startServer(ctx context.Context) error {
 		logging = logging.New()
 	)
 
-	db, err := postgres.Connect(ctx)
+	db, err := postgres.Connect(ctx, os.Getenv("DATABASE_URL"))
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -3,14 +3,12 @@ module github.com/emergency-messages
 go 1.20
 
 require (
-	github.com/DATA-DOG/go-sqlmock v1.5.0
 	github.com/go-chi/chi/v5 v5.0.10
 	github.com/jackc/pgx/v5 v5.5.0
 	github.com/joho/godotenv v1.5.1
 	github.com/mailgun/mailgun-go v2.0.0+incompatible
 	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.8.1
-	go.uber.org/mock v0.3.0
 	golang.org/x/time v0.5.0
 )
 

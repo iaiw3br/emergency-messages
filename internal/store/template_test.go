@@ -1,73 +1,113 @@
 package store
 
 import (
+	"context"
+	"github.com/emergency-messages/internal/logging"
 	"github.com/emergency-messages/internal/models"
-	"github.com/emergency-messages/internal/store/mock_store"
-	"go.uber.org/mock/gomock"
+	"github.com/emergency-messages/pkg/client/postgres"
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
+const (
+	testDatabaseURL = "postgres://postgres:postgres@localhost:5432/test-emergency-messages"
+)
+
 func TestTemplate_Create(t *testing.T) {
-	t.Run("when send all data have then no error", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
-		template := models.Template{
+	ctx := context.Background()
+	db, err := postgres.Connect(ctx, testDatabaseURL)
+	assert.NoError(t, err)
+	assert.NotNil(t, db)
+
+	wantTemplate := &models.Template{
+		Subject: "MSCH",
+		Text:    "be careful",
+	}
+	store := NewTemplate(db, logging.New())
+	gotTemplate, err := store.Create(ctx, wantTemplate)
+	assert.NoError(t, err)
+
+	assert.Equal(t, wantTemplate.Subject, gotTemplate.Subject)
+	assert.Equal(t, wantTemplate.Text, gotTemplate.Text)
+	assert.NotNil(t, gotTemplate.ID)
+}
+
+func TestTemplate_Update(t *testing.T) {
+	t.Run("when create, update template then no error", func(t *testing.T) {
+		// arrange
+		ctx := context.Background()
+		db, err := postgres.Connect(ctx, testDatabaseURL)
+		assert.NoError(t, err)
+		assert.NotNil(t, db)
+
+		template := &models.Template{
 			Subject: "MSCH",
 			Text:    "be careful",
 		}
-		temp := mock_store.NewMockTemplater(ctrl)
-		temp.
-			EXPECT().
-			Create(gomock.Any(), template).
-			Return(nil).
-			AnyTimes()
+		store := NewTemplate(db, logging.New())
+		templateCreated, err := store.Create(ctx, template)
+		assert.NoError(t, err)
+
+		templateToUpdate := &models.Template{
+			ID:      templateCreated.ID,
+			Subject: "new subject",
+			Text:    "new text",
+		}
+		// act
+		err = store.Update(ctx, templateToUpdate)
+
+		// assert
+		assert.NoError(t, err)
+		gotTemplate, err := store.GetByID(ctx, templateCreated.ID)
+		assert.NoError(t, err)
+
+		assert.Equal(t, templateToUpdate.Subject, gotTemplate.Subject)
+		assert.Equal(t, templateToUpdate.Text, gotTemplate.Text)
 	})
-	t.Run("when send nil then error", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
-		temp := mock_store.NewMockTemplater(ctrl)
-		temp.
-			EXPECT().
-			Create(gomock.Any(), nil).
-			Return(nil).
-			AnyTimes()
+	t.Run("when update template which doesn't exist in database then error", func(t *testing.T) {
+		ctx := context.Background()
+		db, err := postgres.Connect(ctx, testDatabaseURL)
+		assert.NoError(t, err)
+		assert.NotNil(t, db)
+		store := NewTemplate(db, logging.New())
+
+		templateToUpdate := &models.Template{
+			Subject: "new subject",
+			Text:    "new text",
+		}
+		err = store.Update(ctx, templateToUpdate)
+		assert.Error(t, err)
 	})
 }
 
 func TestTemplate_Delete(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-	temp := mock_store.NewMockTemplater(ctrl)
-	temp.
-		EXPECT().
-		Delete(gomock.Any(), gomock.Eq(10)).
-		Return(nil).
-		AnyTimes()
-}
+	t.Run("when delete template then no error", func(t *testing.T) {
+		// arrange
+		ctx := context.Background()
+		db, err := postgres.Connect(ctx, testDatabaseURL)
+		assert.NoError(t, err)
+		assert.NotNil(t, db)
 
-func TestTemplate_GetByID(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-	temp := mock_store.NewMockTemplater(ctrl)
-	var id uint64 = 10
-	temp.
-		EXPECT().
-		GetByID(gomock.Any(), id).
-		Return(&models.Template{}, nil).
-		AnyTimes()
-}
+		template := &models.Template{
+			Subject: "MSCH",
+			Text:    "be careful",
+		}
+		store := NewTemplate(db, logging.New())
+		templateCreated, err := store.Create(ctx, template)
+		assert.NoError(t, err)
 
-func TestTemplate_Update(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-	template := models.Template{
-		Subject: "MSCH",
-		Text:    "be careful",
-	}
-	temp := mock_store.NewMockTemplater(ctrl)
-	temp.
-		EXPECT().
-		Update(gomock.Any(), template).
-		Return(nil).
-		AnyTimes()
+		// act
+		err = store.Delete(ctx, templateCreated.ID)
+		assert.NoError(t, err)
+	})
+	t.Run("when template doesn't exist in database then error", func(t *testing.T) {
+		ctx := context.Background()
+		db, err := postgres.Connect(ctx, testDatabaseURL)
+		assert.NoError(t, err)
+		assert.NotNil(t, db)
+		store := NewTemplate(db, logging.New())
+
+		err = store.Delete(ctx, 999999999)
+		assert.Error(t, err)
+	})
 }

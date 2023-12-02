@@ -54,17 +54,48 @@ func (t Template) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: already exists
 	ctx := context.Background()
-	if err = t.templateService.Create(ctx, template); err != nil {
+	newTemplated, err := t.templateService.Create(ctx, template)
+	if err != nil {
 		t.log.Error("cannot create template")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
+	templateBytes, err := json.Marshal(newTemplated)
+	if err = json.Unmarshal(b, &template); err != nil {
+		t.log.Error("cannot marshal template")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	w.Write(templateBytes)
 	w.WriteHeader(http.StatusCreated)
 }
 
-func (t Template) Update(w http.ResponseWriter, r *http.Request) {}
+func (t Template) Update(w http.ResponseWriter, r *http.Request) {
+	b, err := io.ReadAll(r.Body)
+	if err != nil {
+		t.log.Error("cannot read body")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	var template *models.Template
+	if err = json.Unmarshal(b, &template); err != nil {
+		t.log.Error("cannot unmarshal body")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	ctx := context.Background()
+	if err := t.templateService.Update(ctx, template); err != nil {
+		t.log.Error("cannot create template")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
 
 func (t Template) Delete(w http.ResponseWriter, r *http.Request) {}
