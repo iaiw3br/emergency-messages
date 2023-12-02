@@ -4,27 +4,28 @@ import (
 	"context"
 	"github.com/emergency-messages/internal/logging"
 	"github.com/emergency-messages/internal/models"
-	"github.com/emergency-messages/pkg/client/postgres"
+	"github.com/emergency-messages/pkg/tests"
+	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
-const (
-	testDatabaseURL = "postgres://postgres:postgres@localhost:5432/test-emergency-messages"
-)
+func setupTestDatabase(t *testing.T) *pgx.Conn {
+	t.Helper()
+	db, err := tests.SetupTestDatabase()
+	assert.NoError(t, err)
+	return db
+}
 
 func TestTemplate_Create(t *testing.T) {
-	ctx := context.Background()
-	db, err := postgres.Connect(ctx, testDatabaseURL)
-	assert.NoError(t, err)
-	assert.NotNil(t, db)
+	db := setupTestDatabase(t)
 
 	wantTemplate := &models.Template{
 		Subject: "MSCH",
 		Text:    "be careful",
 	}
 	store := NewTemplate(db, logging.New())
-	gotTemplate, err := store.Create(ctx, wantTemplate)
+	gotTemplate, err := store.Create(context.Background(), wantTemplate)
 	assert.NoError(t, err)
 
 	assert.Equal(t, wantTemplate.Subject, gotTemplate.Subject)
@@ -36,9 +37,7 @@ func TestTemplate_Update(t *testing.T) {
 	t.Run("when create, update template then no error", func(t *testing.T) {
 		// arrange
 		ctx := context.Background()
-		db, err := postgres.Connect(ctx, testDatabaseURL)
-		assert.NoError(t, err)
-		assert.NotNil(t, db)
+		db := setupTestDatabase(t)
 
 		template := &models.Template{
 			Subject: "MSCH",
@@ -66,16 +65,14 @@ func TestTemplate_Update(t *testing.T) {
 	})
 	t.Run("when update template which doesn't exist in database then error", func(t *testing.T) {
 		ctx := context.Background()
-		db, err := postgres.Connect(ctx, testDatabaseURL)
-		assert.NoError(t, err)
-		assert.NotNil(t, db)
+		db := setupTestDatabase(t)
 		store := NewTemplate(db, logging.New())
 
 		templateToUpdate := &models.Template{
 			Subject: "new subject",
 			Text:    "new text",
 		}
-		err = store.Update(ctx, templateToUpdate)
+		err := store.Update(ctx, templateToUpdate)
 		assert.Error(t, err)
 	})
 }
@@ -84,9 +81,7 @@ func TestTemplate_Delete(t *testing.T) {
 	t.Run("when delete template then no error", func(t *testing.T) {
 		// arrange
 		ctx := context.Background()
-		db, err := postgres.Connect(ctx, testDatabaseURL)
-		assert.NoError(t, err)
-		assert.NotNil(t, db)
+		db := setupTestDatabase(t)
 
 		template := &models.Template{
 			Subject: "MSCH",
@@ -102,12 +97,10 @@ func TestTemplate_Delete(t *testing.T) {
 	})
 	t.Run("when template doesn't exist in database then error", func(t *testing.T) {
 		ctx := context.Background()
-		db, err := postgres.Connect(ctx, testDatabaseURL)
-		assert.NoError(t, err)
-		assert.NotNil(t, db)
+		db := setupTestDatabase(t)
 		store := NewTemplate(db, logging.New())
 
-		err = store.Delete(ctx, 999999999)
+		err := store.Delete(ctx, 999999999)
 		assert.Error(t, err)
 	})
 }
