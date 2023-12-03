@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"github.com/emergency-messages/internal/logging"
 	"github.com/emergency-messages/internal/models"
+	mailg "github.com/emergency-messages/internal/providers/email/mailgun"
 	"github.com/emergency-messages/internal/store"
-	"github.com/mailgun/mailgun-go"
-	"os"
+	"runtime"
+	"sync"
 )
 
 type MessageService struct {
@@ -15,14 +16,16 @@ type MessageService struct {
 	templateStore store.Templater
 	userStore     store.User
 	log           logging.Logger
+	email         *mailg.Client
 }
 
-func NewMessage(messageStore store.Messager, templateStore store.Templater, userStore store.User, log logging.Logger) *MessageService {
+func NewMessage(messageStore store.Messager, templateStore store.Templater, userStore store.User, email *mailg.Client, log logging.Logger) *MessageService {
 	return &MessageService{
 		messageStore:  messageStore,
 		templateStore: templateStore,
 		userStore:     userStore,
 		log:           log,
+		email:         email,
 	}
 }
 
@@ -39,47 +42,53 @@ func (m MessageService) Send(ctx context.Context, message models.CreateMessage) 
 		return err
 	}
 
-	for _, user := range users {
-		text := fmt.Sprintf(template.Text, message.City, message.Strength)
-		newMessage := models.Message{
-			UserID:  user.ID,
-			Subject: template.Subject,
-			Text:    text,
-			Status:  models.Created,
-		}
-
-		if err = m.messageStore.Create(ctx, newMessage); err != nil {
-			m.log.Errorf("cannot create new message: %v", newMessage)
-			return err
-		}
-
-		// TODO: add send by sms and add goroutine
-		_, err := m.sendByEmail(newMessage, user.Email)
-		if err != nil {
-			m.log.Errorf("cannot send email to: %s", user.Email)
-			return err
-		}
-
-		newMessage.Deliver()
-		if err = m.messageStore.UpdateStatus(ctx, newMessage.ID, newMessage.Status); err != nil {
-			m.log.Errorf("cannot update message: %d to status %s", newMessage.ID, newMessage.Status)
-			return err
-		}
+	text := fmt.Sprintf(template.Text, message.City, message.Strength)
+	newMessage := models.Message{
+		Subject: template.Subject,
+		Text:    text,
+		Status:  models.Created,
 	}
+
+	usersCh := make(chan models.User)
+	var wg sync.WaitGroup
+	for i := 0; i <= runtime.NumCPU(); i++ {
+		wg.Add(1)
+		go m.workers(ctx, usersCh, newMessage, &wg)
+	}
+
+	go makeWork(users, usersCh)
+	wg.Wait()
 
 	return nil
 }
 
-func (m MessageService) sendByEmail(newMessage models.Message, email string) (string, error) {
-	apiKey := os.Getenv("EMAIL_API_KEY")
-	domain := os.Getenv("EMAIL_DOMAIN")
-	mg := mailgun.NewMailgun(domain, apiKey)
-	msg := mg.NewMessage(
-		"Mailgun Sandbox <postmaster@sandboxd2c7ff34f9f943b98ad2246a10bb7d8a.mailgun.org>",
-		newMessage.Subject,
-		newMessage.Text,
-		email,
-	)
-	_, id, err := mg.Send(msg)
-	return id, err
+func (m MessageService) workers(ctx context.Context, usersCh <-chan models.User, newMessage models.Message, wg *sync.WaitGroup) {
+	defer wg.Done()
+	for user := range usersCh {
+		newMessage.UserID = user.ID
+
+		if err := m.messageStore.Create(ctx, newMessage); err != nil {
+			m.log.Errorf("cannot create new message: %v", newMessage)
+			continue
+		}
+
+		// TODO: add send by sms and add goroutine
+		if err := m.email.Send(newMessage, user.Email); err != nil {
+			m.log.Errorf("cannot send email to: %s", user.Email)
+			continue
+		}
+
+		newMessage.Deliver()
+		if err := m.messageStore.UpdateStatus(ctx, newMessage.ID, newMessage.Status); err != nil {
+			m.log.Errorf("cannot update message: %d to status %s", newMessage.ID, newMessage.Status)
+			continue
+		}
+	}
+}
+
+func makeWork(users []models.User, usersCh chan<- models.User) {
+	for _, u := range users {
+		usersCh <- u
+	}
+	close(usersCh)
 }
