@@ -8,6 +8,7 @@ import (
 	"github.com/emergency-messages/internal/handler"
 	"github.com/emergency-messages/internal/logging"
 	mdlware "github.com/emergency-messages/internal/middleware"
+	"github.com/emergency-messages/internal/providers/email/mailgun"
 	"github.com/emergency-messages/internal/service"
 	"github.com/emergency-messages/internal/store"
 	"github.com/emergency-messages/pkg/client/postgres"
@@ -116,8 +117,10 @@ func registerEntities(db *pgx.Conn, l logging.Logger, r *chi.Mux) {
 	templateHandler := handler.NewTemplate(templateService, l)
 	templateHandler.Register(r)
 
+	mailg := mailg.New(l)
+
 	messageStore := store.NewMessage(db, l)
-	messageService := service.NewMessage(messageStore, templateStore, userStore, l)
+	messageService := service.NewMessage(messageStore, templateStore, userStore, mailg, l)
 	messageHandler := handler.NewMessage(messageService, l)
 	messageHandler.Register(r)
 }
