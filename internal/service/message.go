@@ -9,7 +9,6 @@ import (
 	"github.com/emergency-messages/internal/store"
 	"runtime"
 	"sync"
-	"time"
 )
 
 type MessageService struct {
@@ -74,11 +73,10 @@ func (m MessageService) send(ctx context.Context, usersCh <-chan models.User, ne
 			continue
 		}
 
-		time.Sleep(time.Second * 3)
-		// if err := m.email.Send(newMessage, user.Email); err != nil {
-		// 	m.log.Errorf("cannot send email to: %s", user.Email)
-		// 	continue
-		// }
+		if err := m.email.Send(newMessage, user.Email); err != nil {
+			m.log.Errorf("cannot send email to: %s", user.Email)
+			continue
+		}
 
 		if err := m.messageStore.UpdateStatus(ctx, id, models.Delivered); err != nil {
 			m.log.Errorf("cannot update message: %d to status %s", newMessage.ID, newMessage.Status)

@@ -9,6 +9,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"io"
 	"net/http"
+	"strconv"
 )
 
 const (
@@ -47,7 +48,7 @@ func (t Template) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var template *models.Template
+	var template *models.TemplateCreate
 	if err = json.Unmarshal(b, &template); err != nil {
 		t.log.Error("cannot unmarshal body")
 		w.WriteHeader(http.StatusBadRequest)
@@ -81,7 +82,7 @@ func (t Template) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var template *models.Template
+	var template *models.TemplateUpdate
 	if err = json.Unmarshal(b, &template); err != nil {
 		t.log.Error("cannot unmarshal body")
 		w.WriteHeader(http.StatusBadRequest)
@@ -98,4 +99,19 @@ func (t Template) Update(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func (t Template) Delete(w http.ResponseWriter, r *http.Request) {}
+func (t Template) Delete(w http.ResponseWriter, r *http.Request) {
+	ctx := context.Background()
+	idStr := r.URL.Query().Get("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		t.log.Errorf("cannot transform id:%s to int", idStr)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	if err = t.templateService.Delete(ctx, uint64(id)); err != nil {
+		t.log.Error("template service delete return error:", err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+}

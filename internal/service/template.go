@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"errors"
 	"github.com/emergency-messages/internal/logging"
 	"github.com/emergency-messages/internal/models"
 	"github.com/emergency-messages/internal/store"
@@ -21,14 +20,8 @@ func NewTemplate(templateStore store.Templater, log logging.Logger) Template {
 }
 
 // Create a new template
-func (t Template) Create(ctx context.Context, template *models.Template) (uint64, error) {
-	if template.Subject == "" {
-		err := errors.New("subject is empty")
-		t.log.Error(err)
-		return 0, err
-	}
-	if template.Text == "" {
-		err := errors.New("text is empty")
+func (t Template) Create(ctx context.Context, template *models.TemplateCreate) (uint64, error) {
+	if err := template.Validate(); err != nil {
 		t.log.Error(err)
 		return 0, err
 	}
@@ -42,8 +35,14 @@ func (t Template) Create(ctx context.Context, template *models.Template) (uint64
 	return id, nil
 }
 
-func (t Template) Delete() {}
+func (t Template) Delete(ctx context.Context, id uint64) error {
+	return t.templateStore.Delete(ctx, id)
+}
 
-func (t Template) Update(ctx context.Context, template *models.Template) error {
+func (t Template) Update(ctx context.Context, template *models.TemplateUpdate) error {
+	if err := template.Validate(); err != nil {
+		t.log.Error(err)
+		return err
+	}
 	return t.templateStore.Update(ctx, template)
 }

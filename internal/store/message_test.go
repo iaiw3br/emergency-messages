@@ -13,7 +13,7 @@ func TestMessage_Create(t *testing.T) {
 	db := setupTestDatabase(t)
 
 	// create template
-	template := &models.Template{
+	template := &models.TemplateCreate{
 		Subject: "test subject",
 		Text:    "test text",
 	}
@@ -66,7 +66,7 @@ func TestMessage_UpdateStatus(t *testing.T) {
 	db := setupTestDatabase(t)
 
 	// create template
-	template := &models.Template{
+	template := &models.TemplateCreate{
 		Subject: "test subject",
 		Text:    "test text",
 	}

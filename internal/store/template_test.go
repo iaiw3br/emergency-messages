@@ -22,7 +22,7 @@ func TestTemplate_Create(t *testing.T) {
 	db := setupTestDatabase(t)
 	ctx := context.Background()
 
-	wantTemplate := &models.Template{
+	wantTemplate := &models.TemplateCreate{
 		Subject: "MSCH",
 		Text:    "be careful",
 	}
@@ -43,7 +43,7 @@ func TestTemplate_Update(t *testing.T) {
 		ctx := context.Background()
 		db := setupTestDatabase(t)
 
-		template := &models.Template{
+		template := &models.TemplateCreate{
 			Subject: "MSCH",
 			Text:    "be careful",
 		}
@@ -52,7 +52,7 @@ func TestTemplate_Update(t *testing.T) {
 		assert.NoError(t, err)
 		assert.NotNil(t, id)
 
-		templateToUpdate := &models.Template{
+		templateToUpdate := &models.TemplateUpdate{
 			ID:      id,
 			Subject: "new subject",
 			Text:    "new text",
@@ -72,7 +72,7 @@ func TestTemplate_Update(t *testing.T) {
 		db := setupTestDatabase(t)
 		store := NewTemplate(db, logging.New())
 
-		templateToUpdate := &models.Template{
+		templateToUpdate := &models.TemplateUpdate{
 			Subject: "new subject",
 			Text:    "new text",
 		}
@@ -87,7 +87,7 @@ func TestTemplate_Delete(t *testing.T) {
 		ctx := context.Background()
 		db := setupTestDatabase(t)
 
-		template := &models.Template{
+		template := &models.TemplateCreate{
 			Subject: "MSCH",
 			Text:    "be careful",
 		}
