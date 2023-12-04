@@ -1,12 +1,11 @@
 package models
 
 type Message struct {
-	ID         uint64        `json:"id"`
-	Subject    string        `json:"subject"`
-	Text       string        `json:"text"`
-	Status     MessageStatus `json:"status"`
-	UserID     uint64        `json:"user_id"`
-	TemplateID uint64        `json:"template_id"`
+	ID      uint64        `json:"id"`
+	Subject string        `json:"subject"`
+	Text    string        `json:"text"`
+	Status  MessageStatus `json:"status"`
+	UserID  uint64        `json:"user_id"`
 }
 
 type MessageStatus string

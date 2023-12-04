@@ -13,8 +13,9 @@ type Message struct {
 }
 
 type Messager interface {
-	Create(ctx context.Context, message models.Message) error
+	Create(ctx context.Context, message models.Message) (*models.Message, error)
 	UpdateStatus(ctx context.Context, id uint64, status models.MessageStatus) error
+	GetByID(ctx context.Context, id uint64) (*models.Message, error)
 }
 
 func NewMessage(db *pgx.Conn, log logging.Logger) Messager {
@@ -24,16 +25,19 @@ func NewMessage(db *pgx.Conn, log logging.Logger) Messager {
 	}
 }
 
-func (m Message) Create(ctx context.Context, message models.Message) error {
+func (m Message) Create(ctx context.Context, message models.Message) (*models.Message, error) {
 	sql := `
 		INSERT INTO messages (status, subject, text, user_id) 
-		VALUES ($1, $2, $3, $4);
+		VALUES ($1, $2, $3, $4)
+		RETURNING id, status, subject, text, user_id
 	`
-	_, err := m.db.Exec(ctx, sql, message.Status, message.Subject, message.Text, message.UserID)
+	result := &models.Message{}
+	row := m.db.QueryRow(ctx, sql, message.Status, message.Subject, message.Text, message.UserID)
+	err := row.Scan(&result.ID, &result.Status, &result.Subject, &result.Text, &result.UserID)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+	return result, nil
 }
 
 func (m Message) UpdateStatus(ctx context.Context, id uint64, status models.MessageStatus) error {
@@ -44,4 +48,18 @@ func (m Message) UpdateStatus(ctx context.Context, id uint64, status models.Mess
 	}
 
 	return nil
+}
+
+func (m Message) GetByID(ctx context.Context, id uint64) (*models.Message, error) {
+	sql := `
+		SELECT id, status, subject, text, user_id
+		FROM messages
+		WHERE id = $1;
+	`
+	message := &models.Message{}
+	err := m.db.QueryRow(ctx, sql, id).Scan(&message.ID, &message.Status, &message.Subject, &message.Text, &message.UserID)
+	if err != nil {
+		return nil, err
+	}
+	return message, nil
 }

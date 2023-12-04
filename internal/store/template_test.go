@@ -14,6 +14,7 @@ func setupTestDatabase(t *testing.T) *pgx.Conn {
 	t.Helper()
 	db, err := tests.SetupTestDatabase()
 	assert.NoError(t, err)
+	assert.NotNil(t, db)
 	return db
 }
 

@@ -33,7 +33,16 @@ func (u UserService) Upload(csvData io.Reader) error {
 		u.log.Error(err)
 		return err
 	}
-	return u.userStore.CreateMany(ctx, users)
+	usersCreated := make([]*models.User, 0, len(users))
+	for _, user := range users {
+		newUser, err := u.userStore.Create(ctx, user)
+		if err != nil {
+			return err
+		}
+		usersCreated = append(usersCreated, newUser)
+	}
+	// TODO return users created
+	return nil
 }
 
 func (u UserService) getUsersFromCSV(csvData io.Reader) ([]models.User, error) {
