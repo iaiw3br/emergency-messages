@@ -67,7 +67,7 @@ func (m MessageService) workers(ctx context.Context, usersCh <-chan models.User,
 	for user := range usersCh {
 		newMessage.UserID = user.ID
 
-		if err := m.messageStore.Create(ctx, newMessage); err != nil {
+		if _, err := m.messageStore.Create(ctx, newMessage); err != nil {
 			m.log.Errorf("cannot create new message: %v", newMessage)
 			continue
 		}
