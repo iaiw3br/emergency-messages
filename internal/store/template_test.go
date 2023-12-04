@@ -20,18 +20,21 @@ func setupTestDatabase(t *testing.T) *pgx.Conn {
 
 func TestTemplate_Create(t *testing.T) {
 	db := setupTestDatabase(t)
+	ctx := context.Background()
 
 	wantTemplate := &models.Template{
 		Subject: "MSCH",
 		Text:    "be careful",
 	}
 	store := NewTemplate(db, logging.New())
-	gotTemplate, err := store.Create(context.Background(), wantTemplate)
+	id, err := store.Create(ctx, wantTemplate)
 	assert.NoError(t, err)
+	assert.NotNil(t, id)
 
+	gotTemplate, err := store.GetByID(ctx, id)
+	assert.NoError(t, err)
 	assert.Equal(t, wantTemplate.Subject, gotTemplate.Subject)
 	assert.Equal(t, wantTemplate.Text, gotTemplate.Text)
-	assert.NotNil(t, gotTemplate.ID)
 }
 
 func TestTemplate_Update(t *testing.T) {
@@ -45,22 +48,22 @@ func TestTemplate_Update(t *testing.T) {
 			Text:    "be careful",
 		}
 		store := NewTemplate(db, logging.New())
-		templateCreated, err := store.Create(ctx, template)
+		id, err := store.Create(ctx, template)
 		assert.NoError(t, err)
+		assert.NotNil(t, id)
 
 		templateToUpdate := &models.Template{
-			ID:      templateCreated.ID,
+			ID:      id,
 			Subject: "new subject",
 			Text:    "new text",
 		}
 		// act
 		err = store.Update(ctx, templateToUpdate)
+		assert.NoError(t, err)
 
 		// assert
+		gotTemplate, err := store.GetByID(ctx, id)
 		assert.NoError(t, err)
-		gotTemplate, err := store.GetByID(ctx, templateCreated.ID)
-		assert.NoError(t, err)
-
 		assert.Equal(t, templateToUpdate.Subject, gotTemplate.Subject)
 		assert.Equal(t, templateToUpdate.Text, gotTemplate.Text)
 	})
@@ -89,11 +92,12 @@ func TestTemplate_Delete(t *testing.T) {
 			Text:    "be careful",
 		}
 		store := NewTemplate(db, logging.New())
-		templateCreated, err := store.Create(ctx, template)
+		id, err := store.Create(ctx, template)
 		assert.NoError(t, err)
+		assert.NotNil(t, id)
 
 		// act
-		err = store.Delete(ctx, templateCreated.ID)
+		err = store.Delete(ctx, id)
 		assert.NoError(t, err)
 	})
 	t.Run("when template doesn't exist in database then error", func(t *testing.T) {

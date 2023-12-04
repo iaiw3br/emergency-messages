@@ -9,6 +9,7 @@ import (
 	"github.com/emergency-messages/internal/store"
 	"runtime"
 	"sync"
+	"time"
 )
 
 type MessageService struct {
@@ -53,40 +54,40 @@ func (m MessageService) Send(ctx context.Context, message models.CreateMessage) 
 	var wg sync.WaitGroup
 	for i := 0; i <= runtime.NumCPU(); i++ {
 		wg.Add(1)
-		go m.workers(ctx, usersCh, newMessage, &wg)
+		go m.send(ctx, usersCh, newMessage, &wg)
 	}
 
-	go makeWork(users, usersCh)
+	go sendUsersToUsersChannel(users, usersCh)
 	wg.Wait()
 
 	return nil
 }
 
-func (m MessageService) workers(ctx context.Context, usersCh <-chan models.User, newMessage models.Message, wg *sync.WaitGroup) {
+func (m MessageService) send(ctx context.Context, usersCh <-chan models.User, newMessage models.Message, wg *sync.WaitGroup) {
 	defer wg.Done()
 	for user := range usersCh {
 		newMessage.UserID = user.ID
 
-		if _, err := m.messageStore.Create(ctx, newMessage); err != nil {
+		id, err := m.messageStore.Create(ctx, newMessage)
+		if err != nil {
 			m.log.Errorf("cannot create new message: %v", newMessage)
 			continue
 		}
 
-		// TODO: add send by sms and add goroutine
-		if err := m.email.Send(newMessage, user.Email); err != nil {
-			m.log.Errorf("cannot send email to: %s", user.Email)
-			continue
-		}
+		time.Sleep(time.Second * 3)
+		// if err := m.email.Send(newMessage, user.Email); err != nil {
+		// 	m.log.Errorf("cannot send email to: %s", user.Email)
+		// 	continue
+		// }
 
-		newMessage.Deliver()
-		if err := m.messageStore.UpdateStatus(ctx, newMessage.ID, newMessage.Status); err != nil {
+		if err := m.messageStore.UpdateStatus(ctx, id, models.Delivered); err != nil {
 			m.log.Errorf("cannot update message: %d to status %s", newMessage.ID, newMessage.Status)
 			continue
 		}
 	}
 }
 
-func makeWork(users []models.User, usersCh chan<- models.User) {
+func sendUsersToUsersChannel(users []models.User, usersCh chan<- models.User) {
 	for _, u := range users {
 		usersCh <- u
 	}

@@ -15,16 +15,6 @@ const (
 	Delivered MessageStatus = "delivered"
 )
 
-// Create update status to Created
-func (m *Message) Create() {
-	m.Status = Created
-}
-
-// Deliver update status to Delivered
-func (m *Message) Deliver() {
-	m.Status = Delivered
-}
-
 type CreateMessage struct {
 	TemplateID int    `json:"template_id"`
 	City       string `json:"city"`

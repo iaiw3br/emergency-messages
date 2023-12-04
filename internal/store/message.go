@@ -13,7 +13,7 @@ type Message struct {
 }
 
 type Messager interface {
-	Create(ctx context.Context, message models.Message) (*models.Message, error)
+	Create(ctx context.Context, message models.Message) (uint64, error)
 	UpdateStatus(ctx context.Context, id uint64, status models.MessageStatus) error
 	GetByID(ctx context.Context, id uint64) (*models.Message, error)
 }
@@ -25,17 +25,17 @@ func NewMessage(db *pgx.Conn, log logging.Logger) Messager {
 	}
 }
 
-func (m Message) Create(ctx context.Context, message models.Message) (*models.Message, error) {
+func (m Message) Create(ctx context.Context, message models.Message) (uint64, error) {
 	sql := `
 		INSERT INTO messages (status, subject, text, user_id) 
 		VALUES ($1, $2, $3, $4)
-		RETURNING id, status, subject, text, user_id
+		RETURNING id
 	`
-	result := &models.Message{}
+	var result uint64
 	row := m.db.QueryRow(ctx, sql, message.Status, message.Subject, message.Text, message.UserID)
-	err := row.Scan(&result.ID, &result.Status, &result.Subject, &result.Text, &result.UserID)
+	err := row.Scan(&result)
 	if err != nil {
-		return nil, err
+		return 0, err
 	}
 	return result, nil
 }

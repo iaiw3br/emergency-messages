@@ -21,25 +21,25 @@ func NewTemplate(templateStore store.Templater, log logging.Logger) Template {
 }
 
 // Create a new template
-func (t Template) Create(ctx context.Context, template *models.Template) (*models.Template, error) {
+func (t Template) Create(ctx context.Context, template *models.Template) (uint64, error) {
 	if template.Subject == "" {
 		err := errors.New("subject is empty")
 		t.log.Error(err)
-		return nil, err
+		return 0, err
 	}
 	if template.Text == "" {
 		err := errors.New("text is empty")
 		t.log.Error(err)
-		return nil, err
+		return 0, err
 	}
 
-	newTemplate, err := t.templateStore.Create(ctx, template)
+	id, err := t.templateStore.Create(ctx, template)
 	if err != nil {
 		t.log.Errorf("cannot create template %v", template)
-		return nil, err
+		return 0, err
 	}
 
-	return newTemplate, nil
+	return id, nil
 }
 
 func (t Template) Delete() {}

@@ -14,7 +14,7 @@ type Template struct {
 }
 
 type Templater interface {
-	Create(ctx context.Context, template *models.Template) (*models.Template, error)
+	Create(ctx context.Context, template *models.Template) (uint64, error)
 	Update(ctx context.Context, template *models.Template) error
 	Delete(ctx context.Context, id uint64) error
 	GetByID(ctx context.Context, id uint64) (*models.Template, error)
@@ -27,17 +27,15 @@ func NewTemplate(db *pgx.Conn, log logging.Logger) Templater {
 	}
 }
 
-func (t Template) Create(ctx context.Context, template *models.Template) (*models.Template, error) {
-	result := &models.Template{}
+func (t Template) Create(ctx context.Context, template *models.Template) (uint64, error) {
 	row := t.db.QueryRow(ctx, `
 		INSERT INTO templates (subject, text) 
 		VALUES ($1, $2) 
-		RETURNING id, subject, text;
+		RETURNING id;
 	`, template.Subject, template.Text)
-
-	err := row.Scan(&result.ID, &result.Subject, &result.Text)
-	if err != nil {
-		return nil, err
+	var result uint64
+	if err := row.Scan(&result); err != nil {
+		return 0, err
 	}
 	return result, nil
 }
