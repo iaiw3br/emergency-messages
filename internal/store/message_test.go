@@ -28,7 +28,7 @@ func TestMessage_Create(t *testing.T) {
 	assert.NotNil(t, gotTemplate)
 
 	// create user
-	user := models.User{
+	user := &models.UserCreate{
 		FirstName:   "Mark",
 		LastName:    "Smith",
 		MobilePhone: "+7843286473",
@@ -36,7 +36,7 @@ func TestMessage_Create(t *testing.T) {
 		City:        "Perth",
 	}
 	userStore := NewUserStore(db)
-	userCreated, err := userStore.Create(ctx, user)
+	id, err = userStore.Create(ctx, user)
 	assert.NoError(t, err)
 
 	// create message
@@ -44,7 +44,7 @@ func TestMessage_Create(t *testing.T) {
 		Subject: gotTemplate.Subject,
 		Text:    gotTemplate.Text,
 		Status:  models.Created,
-		UserID:  userCreated.ID,
+		UserID:  id,
 	}
 
 	messageStore := NewMessage(db, logging.New())
@@ -80,7 +80,7 @@ func TestMessage_UpdateStatus(t *testing.T) {
 	assert.NotNil(t, gotTemplate)
 
 	// create user
-	user := models.User{
+	user := &models.UserCreate{
 		FirstName:   "Mark",
 		LastName:    "Smith",
 		MobilePhone: "+7843286473",
@@ -88,7 +88,7 @@ func TestMessage_UpdateStatus(t *testing.T) {
 		City:        "Perth",
 	}
 	userStore := NewUserStore(db)
-	userCreated, err := userStore.Create(ctx, user)
+	id, err = userStore.Create(ctx, user)
 	assert.NoError(t, err)
 
 	// create message
@@ -96,7 +96,7 @@ func TestMessage_UpdateStatus(t *testing.T) {
 		Subject: gotTemplate.Subject,
 		Text:    gotTemplate.Text,
 		Status:  models.Created,
-		UserID:  userCreated.ID,
+		UserID:  id,
 	}
 
 	messageStore := NewMessage(db, logging.New())

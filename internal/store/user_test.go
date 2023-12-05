@@ -11,7 +11,7 @@ func TestUserStore_Create(t *testing.T) {
 	ctx := context.Background()
 	db := setupTestDatabase(t)
 
-	user := models.User{
+	user := &models.UserCreate{
 		FirstName:   "David",
 		LastName:    "Smith",
 		MobilePhone: "+87467328423",
@@ -20,21 +20,16 @@ func TestUserStore_Create(t *testing.T) {
 	}
 
 	userStore := NewUserStore(db)
-	userCreated, err := userStore.Create(ctx, user)
+	id, err := userStore.Create(ctx, user)
 	assert.NoError(t, err)
-	assert.Equal(t, user.FirstName, userCreated.FirstName)
-	assert.Equal(t, user.LastName, userCreated.LastName)
-	assert.Equal(t, user.MobilePhone, userCreated.MobilePhone)
-	assert.Equal(t, user.Email, userCreated.Email)
-	assert.Equal(t, user.City, userCreated.City)
-	assert.NotNil(t, userCreated.ID)
+	assert.NotNil(t, id)
 }
 
 func TestUserStore_FindByCity(t *testing.T) {
 	ctx := context.Background()
 	db := setupTestDatabase(t)
 
-	user := models.User{
+	user := &models.UserCreate{
 		FirstName:   "David",
 		LastName:    "Smith",
 		MobilePhone: "+87467328423",
@@ -42,16 +37,11 @@ func TestUserStore_FindByCity(t *testing.T) {
 		City:        "Moscow",
 	}
 	userStore := NewUserStore(db)
-	userCreated, err := userStore.Create(ctx, user)
+	id, err := userStore.Create(ctx, user)
 	assert.NoError(t, err)
-	assert.Equal(t, user.FirstName, userCreated.FirstName)
-	assert.Equal(t, user.LastName, userCreated.LastName)
-	assert.Equal(t, user.MobilePhone, userCreated.MobilePhone)
-	assert.Equal(t, user.Email, userCreated.Email)
-	assert.Equal(t, user.City, userCreated.City)
-	assert.NotNil(t, userCreated.ID)
+	assert.NotNil(t, id)
 
-	users, err := userStore.FindByCity(ctx, userCreated.City)
+	users, err := userStore.FindByCity(ctx, user.City)
 	assert.NoError(t, err)
 	assert.Equal(t, 1, len(users))
 }

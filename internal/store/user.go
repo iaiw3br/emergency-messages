@@ -11,7 +11,7 @@ type UserStore struct {
 }
 
 type User interface {
-	Create(ctx context.Context, user models.User) (*models.User, error)
+	Create(ctx context.Context, user *models.UserCreate) (uint64, error)
 	FindByCity(ctx context.Context, city string) ([]models.User, error)
 }
 
@@ -21,18 +21,18 @@ func NewUserStore(db *pgx.Conn) User {
 	}
 }
 
-func (u UserStore) Create(ctx context.Context, user models.User) (*models.User, error) {
+func (u UserStore) Create(ctx context.Context, user *models.UserCreate) (uint64, error) {
 	sql := `
 		INSERT INTO users (first_name, last_name, mobile_phone, email, city) 
 		VALUES ($1, $2, $3, $4, $5)
 		RETURNING id
 	`
 	row := u.db.QueryRow(ctx, sql, user.FirstName, user.LastName, user.MobilePhone, user.Email, user.City)
-	result := &user
+	var result uint64
 
-	err := row.Scan(&result.ID)
+	err := row.Scan(&result)
 	if err != nil {
-		return nil, err
+		return 0, err
 	}
 	return result, nil
 }

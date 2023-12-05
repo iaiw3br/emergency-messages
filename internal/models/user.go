@@ -8,3 +8,11 @@ type User struct {
 	Email       string `json:"email"`
 	City        string `json:"city"`
 }
+
+type UserCreate struct {
+	FirstName   string `json:"first_name"`
+	LastName    string `json:"last_name"`
+	MobilePhone string `json:"mobile_phone"`
+	Email       string `json:"email"`
+	City        string `json:"city"`
+}
