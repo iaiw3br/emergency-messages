@@ -9,6 +9,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"io"
 	"net/http"
+	"strconv"
 )
 
 const (
@@ -47,24 +48,70 @@ func (t Template) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var template *models.Template
+	var template *models.TemplateCreate
 	if err = json.Unmarshal(b, &template); err != nil {
 		t.log.Error("cannot unmarshal body")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	// TODO: already exists
 	ctx := context.Background()
-	if err = t.templateService.Create(ctx, template); err != nil {
+	newTemplated, err := t.templateService.Create(ctx, template)
+	if err != nil {
 		t.log.Error("cannot create template")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
+	templateBytes, err := json.Marshal(newTemplated)
+	if err = json.Unmarshal(b, &template); err != nil {
+		t.log.Error("cannot marshal template")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	w.Write(templateBytes)
 	w.WriteHeader(http.StatusCreated)
 }
 
-func (t Template) Update(w http.ResponseWriter, r *http.Request) {}
+func (t Template) Update(w http.ResponseWriter, r *http.Request) {
+	b, err := io.ReadAll(r.Body)
+	if err != nil {
+		t.log.Error("cannot read body")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
 
-func (t Template) Delete(w http.ResponseWriter, r *http.Request) {}
+	var template *models.TemplateUpdate
+	if err = json.Unmarshal(b, &template); err != nil {
+		t.log.Error("cannot unmarshal body")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	ctx := context.Background()
+	if err := t.templateService.Update(ctx, template); err != nil {
+		t.log.Error("cannot create template")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
+
+func (t Template) Delete(w http.ResponseWriter, r *http.Request) {
+	ctx := context.Background()
+	idStr := r.URL.Query().Get("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		t.log.Errorf("cannot transform id:%s to int", idStr)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	if err = t.templateService.Delete(ctx, uint64(id)); err != nil {
+		t.log.Error("template service delete return error:", err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+}

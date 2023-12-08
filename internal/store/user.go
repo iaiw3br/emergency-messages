@@ -6,36 +6,39 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-type User struct {
+type UserStore struct {
 	db *pgx.Conn
 }
 
-// type User interface {
-// 	CreateMany(ctx context.Context, users []models.User) error
-// }
+type User interface {
+	Create(ctx context.Context, user *models.UserCreate) (uint64, error)
+	FindByCity(ctx context.Context, city string) ([]models.User, error)
+}
 
 func NewUserStore(db *pgx.Conn) User {
-	return User{
+	return UserStore{
 		db: db,
 	}
 }
 
-func (u User) CreateMany(ctx context.Context, users []models.User) error {
+func (u UserStore) Create(ctx context.Context, user *models.UserCreate) (uint64, error) {
 	sql := `
-		INSERT INTO users (first_name, last_name, mobile_phone, email) 
-		VALUES ($1, $2, $3, $4)
+		INSERT INTO users (first_name, last_name, mobile_phone, email, city) 
+		VALUES ($1, $2, $3, $4, $5)
+		RETURNING id
 	`
-	for _, v := range users {
-		_, err := u.db.Exec(ctx, sql, v.FirstName, v.LastName, v.MobilePhone, v.Email)
-		if err != nil {
-			return err
-		}
+	row := u.db.QueryRow(ctx, sql, user.FirstName, user.LastName, user.MobilePhone, user.Email, user.City)
+	var result uint64
+
+	err := row.Scan(&result)
+	if err != nil {
+		return 0, err
 	}
-	return nil
+	return result, nil
 }
 
 // FindByCity find all users by city
-func (u User) FindByCity(ctx context.Context, city string) ([]models.User, error) {
+func (u UserStore) FindByCity(ctx context.Context, city string) ([]models.User, error) {
 	sql := `
 		SELECT id, first_name, last_name, email, mobile_phone
 		FROM users

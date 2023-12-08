@@ -2,18 +2,17 @@ package service
 
 import (
 	"context"
-	"errors"
 	"github.com/emergency-messages/internal/logging"
 	"github.com/emergency-messages/internal/models"
 	"github.com/emergency-messages/internal/store"
 )
 
 type Template struct {
-	templateStore store.Template
+	templateStore store.Templater
 	log           logging.Logger
 }
 
-func NewTemplate(templateStore store.Template, log logging.Logger) Template {
+func NewTemplate(templateStore store.Templater, log logging.Logger) Template {
 	return Template{
 		templateStore: templateStore,
 		log:           log,
@@ -21,22 +20,29 @@ func NewTemplate(templateStore store.Template, log logging.Logger) Template {
 }
 
 // Create a new template
-func (t Template) Create(ctx context.Context, template *models.Template) error {
-	if template.Subject == "" {
-		return errors.New("subject is empty")
-	}
-	if template.Text == "" {
-		return errors.New("text is empty")
+func (t Template) Create(ctx context.Context, template *models.TemplateCreate) (uint64, error) {
+	if err := template.Validate(); err != nil {
+		t.log.Error(err)
+		return 0, err
 	}
 
-	if err := t.templateStore.Create(ctx, template); err != nil {
+	id, err := t.templateStore.Create(ctx, template)
+	if err != nil {
 		t.log.Errorf("cannot create template %v", template)
-		return err
+		return 0, err
 	}
 
-	return nil
+	return id, nil
 }
 
-func (t Template) Delete() {}
+func (t Template) Delete(ctx context.Context, id uint64) error {
+	return t.templateStore.Delete(ctx, id)
+}
 
-func (t Template) Update() {}
+func (t Template) Update(ctx context.Context, template *models.TemplateUpdate) error {
+	if err := template.Validate(); err != nil {
+		t.log.Error(err)
+		return err
+	}
+	return t.templateStore.Update(ctx, template)
+}

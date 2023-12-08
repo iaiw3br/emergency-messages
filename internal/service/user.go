@@ -11,7 +11,7 @@ import (
 	"io"
 )
 
-const numberOfCSVCells = 4
+const numberOfCSVCells = 5
 const semicolon = ';'
 
 type UserService struct {
@@ -26,17 +26,49 @@ func NewUserService(userStore store.User, log logging.Logger) UserService {
 	}
 }
 
-func (u UserService) Upload(csvData io.Reader) error {
+func (u UserService) GetByCity(ctx context.Context, city string) ([]models.User, error) {
+	if city == "" {
+		err := errors.New("city is empty")
+		u.log.Error(err)
+		return nil, err
+	}
+	users, err := u.userStore.FindByCity(ctx, city)
+	if err != nil {
+		u.log.Error(err)
+		return nil, err
+	}
+
+	return users, nil
+}
+
+func (u UserService) Upload(csvData io.Reader) ([]*models.User, error) {
 	ctx := context.Background()
 	users, err := u.getUsersFromCSV(csvData)
 	if err != nil {
 		u.log.Error(err)
-		return err
+		return nil, err
 	}
-	return u.userStore.CreateMany(ctx, users)
+	result := make([]*models.User, 0, len(users))
+	for _, user := range users {
+		id, err := u.userStore.Create(ctx, user)
+		if err != nil {
+			return nil, err
+		}
+		// user.ID = id
+		userCreated := &models.User{
+			ID:          id,
+			FirstName:   user.FirstName,
+			LastName:    user.LastName,
+			MobilePhone: user.MobilePhone,
+			Email:       user.Email,
+			City:        user.City,
+		}
+		result = append(result, userCreated)
+	}
+	return result, nil
 }
 
-func (u UserService) getUsersFromCSV(csvData io.Reader) ([]models.User, error) {
+func (u UserService) getUsersFromCSV(csvData io.Reader) ([]*models.UserCreate, error) {
 	csvReader := csv.NewReader(csvData)
 	csvReader.Comma = semicolon
 
@@ -46,7 +78,7 @@ func (u UserService) getUsersFromCSV(csvData io.Reader) ([]models.User, error) {
 		return nil, err
 	}
 
-	users := make([]models.User, 0, len(records))
+	users := make([]*models.UserCreate, 0, len(records))
 	for i, v := range records {
 		if len(v) != numberOfCSVCells {
 			return nil, errors.New(fmt.Sprintf("invalid csv file, expect %d cells, have %d cells", numberOfCSVCells, len(v)))
@@ -60,6 +92,7 @@ func (u UserService) getUsersFromCSV(csvData io.Reader) ([]models.User, error) {
 		// v[1] is secondName
 		// v[2] is MobilePhone
 		// v[3] is Email
+		// v[4] is City
 
 		firstName := v[0]
 		lastName := v[1]
@@ -67,11 +100,12 @@ func (u UserService) getUsersFromCSV(csvData io.Reader) ([]models.User, error) {
 			continue
 		}
 
-		user := models.User{
+		user := &models.UserCreate{
 			FirstName:   firstName,
 			LastName:    lastName,
 			MobilePhone: v[2],
 			Email:       v[3],
+			City:        v[4],
 		}
 
 		users = append(users, user)
