@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/emergency-messages/internal/logging"
 	"github.com/emergency-messages/internal/models"
+	"github.com/emergency-messages/internal/providers"
 	mailg "github.com/emergency-messages/internal/providers/email/mailgun"
 	"github.com/emergency-messages/internal/store"
 	"runtime"
@@ -16,16 +17,16 @@ type MessageService struct {
 	templateStore store.Templater
 	userStore     store.User
 	log           logging.Logger
-	email         *mailg.Client
+	sender        providers.Sender
 }
 
-func NewMessage(messageStore store.Messager, templateStore store.Templater, userStore store.User, email *mailg.Client, log logging.Logger) *MessageService {
+func NewMessage(messageStore store.Messager, templateStore store.Templater, userStore store.User, sender *mailg.Client, log logging.Logger) *MessageService {
 	return &MessageService{
 		messageStore:  messageStore,
 		templateStore: templateStore,
 		userStore:     userStore,
 		log:           log,
-		email:         email,
+		sender:        sender,
 	}
 }
 
@@ -73,7 +74,7 @@ func (m MessageService) send(ctx context.Context, usersCh <-chan models.User, ne
 			continue
 		}
 
-		if err := m.email.Send(newMessage, user.Email); err != nil {
+		if err := m.sender.Send(newMessage, user.Email); err != nil {
 			m.log.Errorf("cannot send email to: %s", user.Email)
 			continue
 		}
