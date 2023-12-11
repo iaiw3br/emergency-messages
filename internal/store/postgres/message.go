@@ -14,12 +14,12 @@ type messageStore struct {
 }
 
 type messageEntity struct {
-	bun.Model
-	ID      string        `json:"id"`
-	Subject string        `json:"subject"`
-	Text    string        `json:"text"`
-	Status  MessageStatus `json:"status"`
-	UserID  uint64        `json:"user_id"`
+	bun.BaseModel `bun:"table:messages,alias:m"`
+	ID            string        `bun:"type:uuid"`
+	Subject       string        `bun:"subject,notnull"`
+	Text          string        `bun:"text,notnull"`
+	Status        MessageStatus `bun:"status,notnull"`
+	UserID        string        `bun:"user_id,notnull"`
 }
 
 type MessageStatus string
@@ -31,7 +31,6 @@ func NewMessage(db *bun.DB) service.Messager {
 }
 
 func (s *messageStore) Create(ctx context.Context, m *models.Message) error {
-	entity := messageEntity{}
 	_, err := s.db.
 		NewInsert().
 		Model(messageEntity{}).
@@ -40,7 +39,6 @@ func (s *messageStore) Create(ctx context.Context, m *models.Message) error {
 	if err != nil {
 		return err
 	}
-	m.ID = entity.ID
 	return nil
 }
 

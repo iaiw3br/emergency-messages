@@ -14,7 +14,7 @@ type userStore struct {
 	db *bun.DB
 }
 
-type entityUser struct {
+type userEntity struct {
 	bun.BaseModel `bun:"table:users,alias:u"`
 	ID            string    `bun:"id,type:uuid"`
 	FirstName     string    `bun:"first_name,notnull"`
@@ -31,8 +31,9 @@ func NewUserStore(db *bun.DB) service.User {
 	}
 }
 
+// Create user
 func (s *userStore) Create(ctx context.Context, user *models.UserCreate) error {
-	entity := entityUser{
+	entity := userEntity{
 		ID:          user.ID,
 		FirstName:   user.FirstName,
 		LastName:    user.LastName,
@@ -53,7 +54,7 @@ func (s *userStore) Create(ctx context.Context, user *models.UserCreate) error {
 
 // FindByCity find all users by city
 func (s *userStore) FindByCity(ctx context.Context, city string) ([]models.User, error) {
-	entities := make([]entityUser, 0)
+	entities := make([]userEntity, 0)
 
 	_, err := s.db.NewSelect().
 		Model(&entities).

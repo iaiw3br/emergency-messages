@@ -6,7 +6,6 @@ import (
 	"github.com/emergency-messages/internal/logging"
 	"github.com/emergency-messages/internal/models"
 	"github.com/emergency-messages/internal/providers"
-	mailg "github.com/emergency-messages/internal/providers/email/mailgun"
 	"runtime"
 	"sync"
 )
@@ -24,7 +23,7 @@ type Messager interface {
 	UpdateStatus(ctx context.Context, id string, status models.MessageStatus) error
 }
 
-func NewMessage(messageStore Messager, templateStore TemplateStore, userStore User, sender *mailg.Client, log logging.Logger) *MessageService {
+func NewMessage(messageStore Messager, templateStore TemplateStore, userStore User, sender providers.Sender, log logging.Logger) *MessageService {
 	return &MessageService{
 		messageStore:  messageStore,
 		templateStore: templateStore,
@@ -77,10 +76,10 @@ func (m MessageService) send(ctx context.Context, usersCh <-chan models.User, ne
 			continue
 		}
 
-		// if err := m.sender.Send(newMessage, user.Email); err != nil {
-		// 	m.log.Errorf("cannot send email to: %s", user.Email)
-		// 	continue
-		// }
+		if err := m.sender.Send(newMessage, user.Email); err != nil {
+			m.log.Errorf("cannot send email to: %s", user.Email)
+			continue
+		}
 
 		if err := m.messageStore.UpdateStatus(ctx, newMessage.ID, models.Delivered); err != nil {
 			m.log.Errorf("cannot update message id: %s to status %s", newMessage.ID, newMessage.Status)

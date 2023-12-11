@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-type store struct {
+type templateStore struct {
 	db *bun.DB
 }
 
@@ -23,13 +23,13 @@ type templateEntity struct {
 }
 
 func NewTemplate(db *bun.DB) service.TemplateStore {
-	return &store{
+	return &templateStore{
 		db: db,
 	}
 }
 
 // Create template
-func (s *store) Create(ctx context.Context, t *models.TemplateCreate) error {
+func (s *templateStore) Create(ctx context.Context, t *models.TemplateCreate) error {
 	entity := templateEntity{
 		ID:      t.ID,
 		Subject: t.Subject,
@@ -44,7 +44,7 @@ func (s *store) Create(ctx context.Context, t *models.TemplateCreate) error {
 }
 
 // Update template
-func (s *store) Update(ctx context.Context, t *models.TemplateUpdate) error {
+func (s *templateStore) Update(ctx context.Context, t *models.TemplateUpdate) error {
 	entity := templateEntity{
 		ID:      t.ID,
 		Subject: t.Subject,
@@ -69,7 +69,7 @@ func (s *store) Update(ctx context.Context, t *models.TemplateUpdate) error {
 }
 
 // Delete template by id
-func (s *store) Delete(ctx context.Context, id string) error {
+func (s *templateStore) Delete(ctx context.Context, id string) error {
 	entity := templateEntity{ID: id}
 	exec, err := s.db.NewDelete().
 		Model(&entity).
@@ -88,7 +88,7 @@ func (s *store) Delete(ctx context.Context, id string) error {
 }
 
 // GetByID find by ID and return store
-func (s *store) GetByID(ctx context.Context, id string) (*models.Template, error) {
+func (s *templateStore) GetByID(ctx context.Context, id string) (*models.Template, error) {
 	entity := new(templateEntity)
 	err := s.db.NewSelect().
 		Model(&entity).
