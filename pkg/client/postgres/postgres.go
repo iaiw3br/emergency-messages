@@ -1,15 +1,18 @@
 package postgres
 
 import (
-	"context"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/stdlib"
+	"github.com/uptrace/bun"
+	"github.com/uptrace/bun/dialect/pgdialect"
 )
 
-func Connect(ctx context.Context, url string) (*pgx.Conn, error) {
-	conn, err := pgx.Connect(ctx, url)
+func Connect(dsn string) *bun.DB {
+	config, err := pgx.ParseConfig(dsn)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 
-	return conn, nil
+	sqldb := stdlib.OpenDB(*config)
+	return bun.NewDB(sqldb, pgdialect.New())
 }

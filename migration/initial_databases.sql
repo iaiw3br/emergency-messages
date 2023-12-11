@@ -1,6 +1,6 @@
 CREATE TABLE users
 (
-    id           serial PRIMARY KEY,
+    id           VARCHAR(100) UNIQUE,
     first_name   VARCHAR(50) UNIQUE NOT NULL,
     last_name    VARCHAR(50)        NOT NULL,
     email        VARCHAR(255) UNIQUE,
@@ -21,7 +21,7 @@ CREATE TABLE messages
 
 CREATE TABLE templates
 (
-    id      serial PRIMARY KEY,
+    id      VARCHAR(100) UNIQUE,
     subject VARCHAR(50) NOT NULL,
     text    text        NOT NULL
 );

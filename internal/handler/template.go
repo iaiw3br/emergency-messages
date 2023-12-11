@@ -9,7 +9,6 @@ import (
 	"github.com/go-chi/chi/v5"
 	"io"
 	"net/http"
-	"strconv"
 )
 
 const (
@@ -17,9 +16,26 @@ const (
 	templatesID = "/:id"
 )
 
+type TemplateService interface {
+	Create(ctx context.Context, template *models.TemplateCreate) error
+	Delete(ctx context.Context, id string) error
+	Update(ctx context.Context, template *models.TemplateUpdate) error
+}
+
 type Template struct {
 	templateService service.Template
 	log             logging.Logger
+}
+
+type templateUpdate struct {
+	ID      string `json:"id"`
+	Subject string `json:"subject"`
+	Text    string `json:"text"`
+}
+
+type templateCreate struct {
+	Subject string `json:"subject"`
+	Text    string `json:"text"`
 }
 
 func NewTemplate(templateService service.Template, log logging.Logger) Template {
@@ -32,9 +48,9 @@ func NewTemplate(templateService service.Template, log logging.Logger) Template 
 func (t Template) Register(r *chi.Mux) {
 	r.Route(templates, func(r chi.Router) {
 		r.Post("/", t.Create)
+		r.Patch("/", t.Update)
 
 		r.Route(templatesID, func(r chi.Router) {
-			r.Patch("/", t.Update)
 			r.Delete("/", t.Delete)
 		})
 	})
@@ -48,29 +64,25 @@ func (t Template) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var template *models.TemplateCreate
-	if err = json.Unmarshal(b, &template); err != nil {
+	var temp *templateCreate
+	if err = json.Unmarshal(b, &temp); err != nil {
 		t.log.Error("cannot unmarshal body")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
+	newTemplate := &models.TemplateCreate{
+		Subject: temp.Subject,
+		Text:    temp.Text,
+	}
+
 	ctx := context.Background()
-	newTemplated, err := t.templateService.Create(ctx, template)
-	if err != nil {
+	if err = t.templateService.Create(ctx, newTemplate); err != nil {
 		t.log.Error("cannot create template")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	templateBytes, err := json.Marshal(newTemplated)
-	if err = json.Unmarshal(b, &template); err != nil {
-		t.log.Error("cannot marshal template")
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
-	w.Write(templateBytes)
 	w.WriteHeader(http.StatusCreated)
 }
 
@@ -82,15 +94,21 @@ func (t Template) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var template *models.TemplateUpdate
+	var template *templateUpdate
 	if err = json.Unmarshal(b, &template); err != nil {
 		t.log.Error("cannot unmarshal body")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
+	u := &models.TemplateUpdate{
+		ID:      template.ID,
+		Subject: template.Subject,
+		Text:    template.Text,
+	}
+
 	ctx := context.Background()
-	if err := t.templateService.Update(ctx, template); err != nil {
+	if err := t.templateService.Update(ctx, u); err != nil {
 		t.log.Error("cannot create template")
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -101,15 +119,9 @@ func (t Template) Update(w http.ResponseWriter, r *http.Request) {
 
 func (t Template) Delete(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
-	idStr := r.URL.Query().Get("id")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		t.log.Errorf("cannot transform id:%s to int", idStr)
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
+	id := r.URL.Query().Get("id")
 
-	if err = t.templateService.Delete(ctx, uint64(id)); err != nil {
+	if err := t.templateService.Delete(ctx, id); err != nil {
 		t.log.Error("template service delete return error:", err)
 		w.WriteHeader(http.StatusBadRequest)
 		return

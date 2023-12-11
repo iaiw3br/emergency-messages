@@ -5,7 +5,7 @@ import (
 	"errors"
 	"github.com/emergency-messages/internal/logging"
 	"github.com/emergency-messages/internal/models"
-	mock_store "github.com/emergency-messages/internal/store/mock"
+	mock_store "github.com/emergency-messages/internal/store/postgres/mock"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 	"testing"
@@ -16,7 +16,7 @@ func TestTemplate_Create(t *testing.T) {
 		controller := gomock.NewController(t)
 		defer controller.Finish()
 
-		store := mock_store.NewMockTemplater(controller)
+		store := mock_store.NewMockTemplateStore(controller)
 		template := &models.TemplateCreate{
 			Subject: "1",
 			Text:    "2",
@@ -28,17 +28,16 @@ func TestTemplate_Create(t *testing.T) {
 		store.
 			EXPECT().
 			Create(ctx, template).
-			Return(uint64(1), nil)
+			Return(nil)
 
-		id, err := service.Create(ctx, template)
+		err := service.Create(ctx, template)
 		assert.NoError(t, err)
-		assert.NotNil(t, id)
 	})
 	t.Run("when subject is empty then error", func(t *testing.T) {
 		controller := gomock.NewController(t)
 		defer controller.Finish()
 
-		store := mock_store.NewMockTemplater(controller)
+		store := mock_store.NewMockTemplateStore(controller)
 		template := &models.TemplateCreate{
 			Text: "2",
 		}
@@ -46,15 +45,14 @@ func TestTemplate_Create(t *testing.T) {
 		log := logging.New()
 		service := NewTemplate(store, log)
 
-		id, err := service.Create(ctx, template)
+		err := service.Create(ctx, template)
 		assert.Error(t, err)
-		assert.Equal(t, uint64(0), id)
 	})
 	t.Run("when text is empty then error", func(t *testing.T) {
 		controller := gomock.NewController(t)
 		defer controller.Finish()
 
-		store := mock_store.NewMockTemplater(controller)
+		store := mock_store.NewMockTemplateStore(controller)
 		template := &models.TemplateCreate{
 			Subject: "2",
 		}
@@ -62,15 +60,14 @@ func TestTemplate_Create(t *testing.T) {
 		log := logging.New()
 		service := NewTemplate(store, log)
 
-		id, err := service.Create(ctx, template)
+		err := service.Create(ctx, template)
 		assert.Error(t, err)
-		assert.Equal(t, uint64(0), id)
 	})
 	t.Run("when error in update then error", func(t *testing.T) {
 		controller := gomock.NewController(t)
 		defer controller.Finish()
 
-		store := mock_store.NewMockTemplater(controller)
+		store := mock_store.NewMockTemplateStore(controller)
 		template := &models.TemplateCreate{
 			Text:    "2",
 			Subject: "2",
@@ -82,12 +79,11 @@ func TestTemplate_Create(t *testing.T) {
 		store.
 			EXPECT().
 			Create(ctx, template).
-			Return(uint64(0), errors.New("")).
+			Return(errors.New("")).
 			AnyTimes()
 
-		id, err := service.Create(ctx, template)
+		err := service.Create(ctx, template)
 		assert.Error(t, err)
-		assert.Equal(t, uint64(0), id)
 	})
 }
 
@@ -96,7 +92,7 @@ func TestNewTemplate(t *testing.T) {
 	defer controller.Finish()
 
 	log := logging.New()
-	store := mock_store.NewMockTemplater(controller)
+	store := mock_store.NewMockTemplateStore(controller)
 	res := NewTemplate(store, log)
 	assert.NotNil(t, res)
 	assert.Equal(t, store, res.templateStore)
@@ -109,17 +105,17 @@ func TestTemplate_Delete(t *testing.T) {
 		defer controller.Finish()
 
 		ctx := context.Background()
-		store := mock_store.NewMockTemplater(controller)
+		store := mock_store.NewMockTemplateStore(controller)
 
 		store.
 			EXPECT().
-			Delete(ctx, uint64(1)).
+			Delete(ctx, "11111").
 			Return(nil)
 
 		log := logging.New()
 		service := NewTemplate(store, log)
 
-		err := service.Delete(ctx, uint64(1))
+		err := service.Delete(ctx, "11111")
 		assert.NoError(t, err)
 	})
 	t.Run("when store returns error then error", func(t *testing.T) {
@@ -127,17 +123,17 @@ func TestTemplate_Delete(t *testing.T) {
 		defer controller.Finish()
 
 		ctx := context.Background()
-		store := mock_store.NewMockTemplater(controller)
+		store := mock_store.NewMockTemplateStore(controller)
 
 		store.
 			EXPECT().
-			Delete(ctx, uint64(1)).
+			Delete(ctx, "11111").
 			Return(errors.New(""))
 
 		log := logging.New()
 		service := NewTemplate(store, log)
 
-		err := service.Delete(ctx, uint64(1))
+		err := service.Delete(ctx, "11111")
 		assert.Error(t, err)
 	})
 }
@@ -148,9 +144,9 @@ func TestTemplate_Update(t *testing.T) {
 		defer controller.Finish()
 
 		ctx := context.Background()
-		store := mock_store.NewMockTemplater(controller)
+		store := mock_store.NewMockTemplateStore(controller)
 		updateTemplate := &models.TemplateUpdate{
-			ID:      1,
+			ID:      "1",
 			Subject: "1",
 			Text:    "2",
 		}
@@ -171,9 +167,9 @@ func TestTemplate_Update(t *testing.T) {
 		defer controller.Finish()
 
 		ctx := context.Background()
-		store := mock_store.NewMockTemplater(controller)
+		store := mock_store.NewMockTemplateStore(controller)
 		updateTemplate := &models.TemplateUpdate{
-			ID:      1,
+			ID:      "1",
 			Subject: "1",
 			Text:    "2",
 		}
@@ -194,7 +190,7 @@ func TestTemplate_Update(t *testing.T) {
 		defer controller.Finish()
 
 		ctx := context.Background()
-		store := mock_store.NewMockTemplater(controller)
+		store := mock_store.NewMockTemplateStore(controller)
 		updateTemplate := &models.TemplateUpdate{
 			Subject: "1",
 			Text:    "2",

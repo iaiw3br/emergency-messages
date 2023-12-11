@@ -4,7 +4,7 @@ import "testing"
 
 func TestTemplateUpdate_Validate(t1 *testing.T) {
 	type fields struct {
-		ID      uint64
+		ID      string
 		Subject string
 		Text    string
 	}
@@ -16,7 +16,7 @@ func TestTemplateUpdate_Validate(t1 *testing.T) {
 		{
 			name: "when id is empty then error",
 			fields: fields{
-				ID:      0,
+				ID:      "",
 				Subject: "1",
 				Text:    "2",
 			},
@@ -25,7 +25,7 @@ func TestTemplateUpdate_Validate(t1 *testing.T) {
 		{
 			name: "when subject is  empty then error",
 			fields: fields{
-				ID:   1,
+				ID:   "1",
 				Text: "2",
 			},
 			wantErr: true,
@@ -33,7 +33,7 @@ func TestTemplateUpdate_Validate(t1 *testing.T) {
 		{
 			name: "when text is empty then error",
 			fields: fields{
-				ID:      0,
+				ID:      "1",
 				Subject: "1",
 			},
 			wantErr: true,
@@ -41,7 +41,7 @@ func TestTemplateUpdate_Validate(t1 *testing.T) {
 		{
 			name: "when all data are not empty then no error",
 			fields: fields{
-				ID:      1,
+				ID:      "1",
 				Subject: "1",
 				Text:    "2",
 			},

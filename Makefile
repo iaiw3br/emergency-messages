@@ -12,6 +12,6 @@ cover:
 
 .PHONY: gen
 gen:
-	mockgen -source=internal/store/message.go -destination internal/store/mock/message_mock.go
-	mockgen -source=internal/store/template.go -destination internal/store/mock/template_mock.go
-	mockgen -source=internal/store/user.go -destination internal/store/mock/user_mock.go
+	mockgen -source=internal/service/message.go -destination internal/store/postgres/mock/message_mock.go
+	mockgen -source=internal/service/template.go -destination internal/store/postgres/mock/template_mock.go
+	mockgen -source=internal/service/user.go -destination internal/store/postgres/mock/user_mock.go

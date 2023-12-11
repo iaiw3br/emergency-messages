@@ -49,12 +49,3 @@ func (m MessageController) Send(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
-
-/*
-шаблоны писем где-то хранятся
-с заголовками
-
-нам прилетает
-город
-и код
-*/
