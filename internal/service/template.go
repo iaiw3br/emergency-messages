@@ -2,17 +2,25 @@ package service
 
 import (
 	"context"
+	"errors"
 	"github.com/emergency-messages/internal/logging"
 	"github.com/emergency-messages/internal/models"
-	"github.com/emergency-messages/internal/store"
+	"time"
 )
 
 type Template struct {
-	templateStore store.Templater
+	templateStore TemplateStore
 	log           logging.Logger
 }
 
-func NewTemplate(templateStore store.Templater, log logging.Logger) Template {
+type TemplateStore interface {
+	Create(ctx context.Context, template *models.TemplateCreate) error
+	Update(ctx context.Context, template *models.TemplateUpdate) error
+	Delete(ctx context.Context, id string) error
+	GetByID(ctx context.Context, id string) (*models.Template, error)
+}
+
+func NewTemplate(templateStore TemplateStore, log logging.Logger) Template {
 	return Template{
 		templateStore: templateStore,
 		log:           log,
@@ -20,25 +28,31 @@ func NewTemplate(templateStore store.Templater, log logging.Logger) Template {
 }
 
 // Create a new template
-func (t Template) Create(ctx context.Context, template *models.TemplateCreate) (uint64, error) {
+func (t Template) Create(ctx context.Context, template *models.TemplateCreate) error {
 	if err := template.Validate(); err != nil {
 		t.log.Error(err)
-		return 0, err
+		return err
 	}
 
-	id, err := t.templateStore.Create(ctx, template)
-	if err != nil {
+	template.Create(time.Now())
+
+	if err := t.templateStore.Create(ctx, template); err != nil {
 		t.log.Errorf("cannot create template %v", template)
-		return 0, err
+		return err
 	}
 
-	return id, nil
+	return nil
 }
 
-func (t Template) Delete(ctx context.Context, id uint64) error {
+// Delete template by id
+func (t Template) Delete(ctx context.Context, id string) error {
+	if id == "" {
+		return errors.New("id is empty")
+	}
 	return t.templateStore.Delete(ctx, id)
 }
 
+// Update template
 func (t Template) Update(ctx context.Context, template *models.TemplateUpdate) error {
 	if err := template.Validate(); err != nil {
 		t.log.Error(err)

@@ -7,19 +7,25 @@ import (
 	"fmt"
 	"github.com/emergency-messages/internal/logging"
 	"github.com/emergency-messages/internal/models"
-	"github.com/emergency-messages/internal/store"
+	"github.com/google/uuid"
 	"io"
+	"time"
 )
 
 const numberOfCSVCells = 5
 const semicolon = ';'
 
 type UserService struct {
-	userStore store.User
+	userStore User
 	log       logging.Logger
 }
 
-func NewUserService(userStore store.User, log logging.Logger) UserService {
+type User interface {
+	Create(ctx context.Context, user *models.UserCreate) error
+	FindByCity(ctx context.Context, city string) ([]models.User, error)
+}
+
+func NewUserService(userStore User, log logging.Logger) UserService {
 	return UserService{
 		userStore: userStore,
 		log:       log,
@@ -41,22 +47,27 @@ func (u UserService) GetByCity(ctx context.Context, city string) ([]models.User,
 	return users, nil
 }
 
-func (u UserService) Upload(csvData io.Reader) ([]*models.User, error) {
+func (u UserService) Upload(csvData io.Reader) ([]*models.UserCreate, error) {
 	ctx := context.Background()
 	users, err := u.getUsersFromCSV(csvData)
 	if err != nil {
 		u.log.Error(err)
 		return nil, err
 	}
-	result := make([]*models.User, 0, len(users))
+
+	result := make([]*models.UserCreate, 0, len(users))
+	now := time.Now()
+
 	for _, user := range users {
-		id, err := u.userStore.Create(ctx, user)
-		if err != nil {
+		user.ID = uuid.New().String()
+		user.Created = now
+		if err = u.userStore.Create(ctx, user); err != nil {
+			u.log.Error(err)
 			return nil, err
 		}
-		// user.ID = id
-		userCreated := &models.User{
-			ID:          id,
+
+		userCreated := &models.UserCreate{
+			ID:          user.ID,
 			FirstName:   user.FirstName,
 			LastName:    user.LastName,
 			MobilePhone: user.MobilePhone,

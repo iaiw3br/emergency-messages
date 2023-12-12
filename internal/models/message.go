@@ -1,11 +1,11 @@
 package models
 
 type Message struct {
-	ID      uint64        `json:"id"`
+	ID      string        `json:"id"`
 	Subject string        `json:"subject"`
 	Text    string        `json:"text"`
 	Status  MessageStatus `json:"status"`
-	UserID  uint64        `json:"user_id"`
+	UserID  string        `json:"user_id"`
 }
 
 type MessageStatus string
@@ -16,7 +16,7 @@ const (
 )
 
 type CreateMessage struct {
-	TemplateID int    `json:"template_id"`
+	TemplateID string `json:"template_id"`
 	City       string `json:"city"`
 	Strength   string `json:"strength"`
 }

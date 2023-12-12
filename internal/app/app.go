@@ -8,13 +8,13 @@ import (
 	"github.com/emergency-messages/internal/handler"
 	"github.com/emergency-messages/internal/logging"
 	mdlware "github.com/emergency-messages/internal/middleware"
-	"github.com/emergency-messages/internal/providers/email/mailgun"
+	mailg "github.com/emergency-messages/internal/providers/email/mailgun"
 	"github.com/emergency-messages/internal/service"
-	"github.com/emergency-messages/internal/store"
-	"github.com/emergency-messages/pkg/client/postgres"
+	"github.com/emergency-messages/internal/store/postgres"
+	client "github.com/emergency-messages/pkg/client/postgres"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/jackc/pgx/v5"
+	"github.com/uptrace/bun"
 	"log"
 	"net/http"
 	"os"
@@ -52,16 +52,12 @@ func startServer(ctx context.Context) error {
 		logging = logging.New()
 	)
 
-	db, err := postgres.Connect(ctx, os.Getenv("DATABASE_URL"))
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer db.Close(ctx)
+	db := client.Connect(os.Getenv("DATABASE_URL"))
 
 	registerEntities(db, logging, r)
 
 	go func() {
-		if err = srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			log.Fatalf("listen and serve: %v", err)
 		}
 	}()
@@ -95,7 +91,7 @@ func startServer(ctx context.Context) error {
 	return nil
 }
 
-func registerEntities(db *pgx.Conn, l logging.Logger, r *chi.Mux) {
+func registerEntities(db *bun.DB, l logging.Logger, r *chi.Mux) {
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
@@ -107,19 +103,19 @@ func registerEntities(db *pgx.Conn, l logging.Logger, r *chi.Mux) {
 	// processing should be stopped.
 	r.Use(middleware.Timeout(contextTimeout))
 
-	userStore := store.NewUserStore(db)
+	userStore := postgres.NewUserStore(db)
 	userService := service.NewUserService(userStore, l)
 	userHandler := handler.NewUser(userService, l)
 	userHandler.Register(r)
 
-	templateStore := store.NewTemplate(db, l)
+	templateStore := postgres.NewTemplate(db)
 	templateService := service.NewTemplate(templateStore, l)
 	templateHandler := handler.NewTemplate(templateService, l)
 	templateHandler.Register(r)
 
 	mailg := mailg.New(l)
 
-	messageStore := store.NewMessage(db, l)
+	messageStore := postgres.NewMessage(db)
 	messageService := service.NewMessage(messageStore, templateStore, userStore, mailg, l)
 	messageHandler := handler.NewMessage(messageService, l)
 	messageHandler.Register(r)

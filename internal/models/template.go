@@ -1,21 +1,26 @@
 package models
 
-import "errors"
+import (
+	"errors"
+	"github.com/google/uuid"
+	"time"
+)
 
 type Template struct {
-	ID      uint64 `json:"id"`
-	Subject string `json:"subject"`
-	Text    string `json:"text"`
+	ID      string    `json:"id"`
+	Subject string    `json:"subject"`
+	Text    string    `json:"text"`
+	Created time.Time `json:"created"`
 }
 
 type TemplateUpdate struct {
-	ID      uint64 `json:"id"`
-	Subject string `json:"subject"`
-	Text    string `json:"text"`
+	ID      string
+	Subject string
+	Text    string
 }
 
 func (t TemplateUpdate) Validate() error {
-	if t.ID == uint64(0) {
+	if t.ID == "" {
 		return errors.New("id is empty")
 	}
 	if t.Subject == "" {
@@ -28,11 +33,13 @@ func (t TemplateUpdate) Validate() error {
 }
 
 type TemplateCreate struct {
-	Subject string `json:"subject"`
-	Text    string `json:"text"`
+	ID      string
+	Subject string
+	Text    string
+	Created time.Time
 }
 
-func (t TemplateCreate) Validate() error {
+func (t *TemplateCreate) Validate() error {
 	if t.Subject == "" {
 		return errors.New("subject is empty")
 	}
@@ -40,4 +47,9 @@ func (t TemplateCreate) Validate() error {
 		return errors.New("text is empty")
 	}
 	return nil
+}
+
+func (t *TemplateCreate) Create(now time.Time) {
+	t.ID = uuid.New().String()
+	t.Created = now
 }

@@ -6,21 +6,24 @@ import (
 	"github.com/emergency-messages/internal/logging"
 	"github.com/emergency-messages/internal/models"
 	"github.com/emergency-messages/internal/providers"
-	mailg "github.com/emergency-messages/internal/providers/email/mailgun"
-	"github.com/emergency-messages/internal/store"
 	"runtime"
 	"sync"
 )
 
 type MessageService struct {
-	messageStore  store.Messager
-	templateStore store.Templater
-	userStore     store.User
+	messageStore  Messager
+	templateStore TemplateStore
+	userStore     User
 	log           logging.Logger
 	sender        providers.Sender
 }
 
-func NewMessage(messageStore store.Messager, templateStore store.Templater, userStore store.User, sender *mailg.Client, log logging.Logger) *MessageService {
+type Messager interface {
+	Create(ctx context.Context, message *models.Message) error
+	UpdateStatus(ctx context.Context, id string, status models.MessageStatus) error
+}
+
+func NewMessage(messageStore Messager, templateStore TemplateStore, userStore User, sender providers.Sender, log logging.Logger) *MessageService {
 	return &MessageService{
 		messageStore:  messageStore,
 		templateStore: templateStore,
@@ -31,15 +34,15 @@ func NewMessage(messageStore store.Messager, templateStore store.Templater, user
 }
 
 func (m MessageService) Send(ctx context.Context, message models.CreateMessage) error {
-	template, err := m.templateStore.GetByID(ctx, uint64(message.TemplateID))
+	template, err := m.templateStore.GetByID(ctx, message.TemplateID)
 	if err != nil {
-		m.log.Errorf("cannot find template by id: %d", message.TemplateID)
+		m.log.Error(err)
 		return err
 	}
 
 	users, err := m.userStore.FindByCity(ctx, message.City)
 	if err != nil {
-		m.log.Errorf("cannot find users by city: %s", message.City)
+		m.log.Error(err)
 		return err
 	}
 
@@ -68,8 +71,7 @@ func (m MessageService) send(ctx context.Context, usersCh <-chan models.User, ne
 	for user := range usersCh {
 		newMessage.UserID = user.ID
 
-		id, err := m.messageStore.Create(ctx, newMessage)
-		if err != nil {
+		if err := m.messageStore.Create(ctx, &newMessage); err != nil {
 			m.log.Errorf("cannot create new message: %v", newMessage)
 			continue
 		}
@@ -79,8 +81,8 @@ func (m MessageService) send(ctx context.Context, usersCh <-chan models.User, ne
 			continue
 		}
 
-		if err := m.messageStore.UpdateStatus(ctx, id, models.Delivered); err != nil {
-			m.log.Errorf("cannot update message: %d to status %s", newMessage.ID, newMessage.Status)
+		if err := m.messageStore.UpdateStatus(ctx, newMessage.ID, models.Delivered); err != nil {
+			m.log.Errorf("cannot update message id: %s to status %s", newMessage.ID, newMessage.Status)
 			continue
 		}
 	}
