@@ -1,6 +1,6 @@
-CREATE TABLE users
+CREATE TABLE IF NOT EXISTS users
 (
-    id           VARCHAR(100) UNIQUE,
+    id           serial PRIMARY KEY,
     first_name   VARCHAR(50) UNIQUE NOT NULL,
     last_name    VARCHAR(50)        NOT NULL,
     email        VARCHAR(255) UNIQUE,
@@ -8,7 +8,7 @@ CREATE TABLE users
     city         VARCHAR(100)       NOT NULL
 );
 
-CREATE TABLE messages
+CREATE TABLE IF NOT EXISTS messages
 (
     id      serial PRIMARY KEY,
     status  VARCHAR(50) NOT NULL,
@@ -19,9 +19,9 @@ CREATE TABLE messages
     CONSTRAINT fk_user_id FOREIGN KEY (user_id) REFERENCES users (id)
 );
 
-CREATE TABLE templates
+CREATE TABLE IF NOT EXISTS templates
 (
-    id      VARCHAR(100) UNIQUE,
+    id      serial PRIMARY KEY,
     subject VARCHAR(50) NOT NULL,
     text    text        NOT NULL
 );

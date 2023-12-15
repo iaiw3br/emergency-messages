@@ -50,11 +50,16 @@ func startServer(ctx context.Context) error {
 			Handler: r,
 		}
 		logging = logging.New()
+		url     = os.Getenv("DATABASE_URL")
 	)
 
-	db := client.Connect(os.Getenv("DATABASE_URL"))
+	db := client.Connect(url)
 
 	registerEntities(db, logging, r)
+
+	// if err := migration.RunMigrate(url); err != nil {
+	// 	log.Fatalf("running migration: %v", err)
+	// }
 
 	go func() {
 		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
