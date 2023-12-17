@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/google/uuid"
-	"github.com/uptrace/bun"
 	"projects/emergency-messages/internal/logging"
 	"projects/emergency-messages/internal/models"
 )
@@ -15,18 +14,11 @@ type TemplateService struct {
 	log           logging.Logger
 }
 
-type TemplateEntity struct {
-	bun.BaseModel `bun:"table:templates,alias:t"`
-	ID            uuid.UUID `bun:"type:uuid,primarykey"`
-	Subject       string    `bun:"subject,notnull"`
-	Text          string    `bun:"text,notnull"`
-}
-
 type TemplateStore interface {
-	Create(ctx context.Context, t *TemplateEntity) error
-	Update(ctx context.Context, t *TemplateEntity) error
+	Create(ctx context.Context, t *models.TemplateEntity) error
+	Update(ctx context.Context, t *models.TemplateEntity) error
 	Delete(ctx context.Context, id uuid.UUID) error
-	GetByID(ctx context.Context, id uuid.UUID) (*TemplateEntity, error)
+	GetByID(ctx context.Context, id uuid.UUID) (*models.TemplateEntity, error)
 }
 
 func NewTemplate(templateStore TemplateStore, log logging.Logger) TemplateService {
@@ -80,21 +72,20 @@ func (s *TemplateService) Update(ctx context.Context, template *models.TemplateU
 	return s.templateStore.Update(ctx, storeModel)
 }
 
-func (s *TemplateService) transformTemplateCreateToStoreModel(t *models.TemplateCreate) (*TemplateEntity, error) {
-	storeModel := &TemplateEntity{
-		ID:      uuid.New(),
+func (s *TemplateService) transformTemplateCreateToStoreModel(t *models.TemplateCreate) (*models.TemplateEntity, error) {
+	storeModel := &models.TemplateEntity{
 		Subject: t.Subject,
 		Text:    t.Text,
 	}
 	return storeModel, nil
 }
 
-func (s *TemplateService) transformTemplateUpdateToStoreModel(t *models.TemplateUpdate) (*TemplateEntity, error) {
+func (s *TemplateService) transformTemplateUpdateToStoreModel(t *models.TemplateUpdate) (*models.TemplateEntity, error) {
 	uuidValue, err := uuid.Parse(t.ID)
 	if err != nil {
 		return nil, fmt.Errorf("updating template: couldn't parse id: %s to UUID. Error: %w", t.ID, err)
 	}
-	storeModel := &TemplateEntity{
+	storeModel := &models.TemplateEntity{
 		ID:      uuidValue,
 		Subject: t.Subject,
 		Text:    t.Text,

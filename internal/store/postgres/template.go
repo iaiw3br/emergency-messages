@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/uptrace/bun"
+	"projects/emergency-messages/internal/models"
 	"projects/emergency-messages/internal/service"
 )
 
@@ -21,7 +22,7 @@ func NewTemplate(db *bun.DB) service.TemplateStore {
 // Create creates the struct of a template in the database.
 // It takes in a context, the new struct of the template.
 // It returns an error if the create operation fails.
-func (s *templateStore) Create(ctx context.Context, t *service.TemplateEntity) error {
+func (s *templateStore) Create(ctx context.Context, t *models.TemplateEntity) error {
 	_, err := s.db.
 		NewInsert().
 		Model(t).
@@ -35,7 +36,7 @@ func (s *templateStore) Create(ctx context.Context, t *service.TemplateEntity) e
 // Update updates the struct of a template in the database.
 // It takes in a context, the new struct of the template.
 // It returns an error if the update operation fails.
-func (s *templateStore) Update(ctx context.Context, t *service.TemplateEntity) error {
+func (s *templateStore) Update(ctx context.Context, t *models.TemplateEntity) error {
 	exec, err := s.db.
 		NewUpdate().
 		Model(t).
@@ -60,7 +61,7 @@ func (s *templateStore) Update(ctx context.Context, t *service.TemplateEntity) e
 func (s *templateStore) Delete(ctx context.Context, id uuid.UUID) error {
 	exec, err := s.db.
 		NewDelete().
-		Model(service.TemplateEntity{}).
+		Model(models.TemplateEntity{}).
 		Where("id = ?", id).
 		Exec(ctx)
 	if err != nil {
@@ -79,8 +80,8 @@ func (s *templateStore) Delete(ctx context.Context, id uuid.UUID) error {
 // GetByID retrieves a template from the database by its ID.
 // It takes in a context and the ID of the template.
 // It returns the template and an error if the retrieval operation fails.
-func (s *templateStore) GetByID(ctx context.Context, id uuid.UUID) (*service.TemplateEntity, error) {
-	entity := &service.TemplateEntity{ID: id}
+func (s *templateStore) GetByID(ctx context.Context, id uuid.UUID) (*models.TemplateEntity, error) {
+	entity := &models.TemplateEntity{ID: id}
 	err := s.db.
 		NewSelect().
 		Model(entity).
@@ -90,7 +91,7 @@ func (s *templateStore) GetByID(ctx context.Context, id uuid.UUID) (*service.Tem
 		return nil, fmt.Errorf("getting by id template: couldn't get template with id: %s. Error: %w", id, err)
 	}
 
-	template := &service.TemplateEntity{
+	template := &models.TemplateEntity{
 		ID:      entity.ID,
 		Subject: entity.Subject,
 		Text:    entity.Text,

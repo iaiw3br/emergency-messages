@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/google/uuid"
-	"github.com/uptrace/bun"
 	"projects/emergency-messages/internal/logging"
 	"projects/emergency-messages/internal/models"
 	"projects/emergency-messages/internal/providers"
@@ -20,15 +19,6 @@ type MessageService struct {
 	sender        providers.Sender
 }
 
-type MessageEntity struct {
-	bun.BaseModel `bun:"table:messages,alias:m"`
-	ID            uuid.UUID     `bun:"type:uuid,primarykey"`
-	Subject       string        `bun:"subject,notnull"`
-	Text          string        `bun:"text,notnull"`
-	Status        MessageStatus `bun:"status,notnull"`
-	UserID        uuid.UUID     `bun:"user_id,notnull"`
-}
-
 type MessageStatus string
 
 const (
@@ -37,7 +27,7 @@ const (
 )
 
 type Message interface {
-	Create(ctx context.Context, m *MessageEntity) error
+	Create(ctx context.Context, m *models.MessageEntity) error
 	UpdateStatus(ctx context.Context, id uuid.UUID, status models.MessageStatus) error
 }
 
@@ -117,18 +107,17 @@ func (s *MessageService) send(ctx context.Context, usersCh <-chan *models.User, 
 	}
 }
 
-func (s *MessageService) transformMessageToStoreModel(m models.Message) (*MessageEntity, error) {
-	storeModel := &MessageEntity{
-		ID:      m.ID,
+func (s *MessageService) transformMessageToStoreModel(m models.Message) (*models.MessageEntity, error) {
+	storeModel := &models.MessageEntity{
 		Subject: m.Subject,
 		Text:    m.Text,
-		Status:  MessageStatus(m.Status),
+		Status:  m.Status,
 		UserID:  m.UserID,
 	}
 	return storeModel, nil
 }
 
-func (s *MessageService) transformUsersStoreToUsers(usersStore []UserEntity) ([]*models.User, error) {
+func (s *MessageService) transformUsersStoreToUsers(usersStore []models.UserEntity) ([]*models.User, error) {
 	users := make([]*models.User, 0, len(usersStore))
 	for _, u := range usersStore {
 		user := &models.User{

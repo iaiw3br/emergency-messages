@@ -6,9 +6,8 @@ import (
 	"errors"
 	"projects/emergency-messages/internal/logging"
 	"projects/emergency-messages/internal/models"
+	"projects/emergency-messages/internal/service/mocks"
 	"testing"
-
-	mock_store "projects/emergency-messages/internal/store/postgres/mock"
 
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
@@ -20,13 +19,12 @@ func TestUserService_GetByCity(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		userStore := mockstore.NewMockUser(ctrl)
+		userStore := mock_service.NewMockUser(ctrl)
 		ctx := context.Background()
 		city := "Moscow"
 
 		wantReturn := []models.User{
 			{
-				ID:          "1",
 				FirstName:   "Albert",
 				LastName:    "Guss",
 				MobilePhone: "+8748327432",
@@ -49,7 +47,7 @@ func TestUserService_GetByCity(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		userStore := mockstore.NewMockUser(ctrl)
+		userStore := mock_service.NewMockUser(ctrl)
 		ctx := context.Background()
 		city := ""
 
@@ -63,7 +61,7 @@ func TestUserService_GetByCity(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		userStore := mockstore.NewMockUser(ctrl)
+		userStore := mock_service.NewMockUser(ctrl)
 		ctx := context.Background()
 		city := "Sao Paulo"
 
@@ -86,10 +84,9 @@ func TestUserService_Upload(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		userStore := mock_store.NewMockUser(ctrl)
+		userStore := mock_service.NewMockUser(ctrl)
 		ctx := context.Background()
 		userCreate := &models.UserCreate{
-			ID:          "111",
 			FirstName:   "Albert",
 			LastName:    "Guss",
 			MobilePhone: "+8748327432",
@@ -114,10 +111,9 @@ func TestUserService_Upload(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		userStore := mock_store.NewMockUser(ctrl)
+		userStore := mock_service.NewMockUser(ctrl)
 		ctx := context.Background()
 		userCreate := &models.UserCreate{
-			ID:          "0e9876fa-b3f2-4d81-9fc9-182641bfa8b0",
 			FirstName:   "Albert",
 			LastName:    "Guss",
 			MobilePhone: "+8748327432",
@@ -142,10 +138,9 @@ func TestUserService_Upload(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		userStore := mock_store.NewMockUser(ctrl)
+		userStore := mock_service.NewMockUser(ctrl)
 		ctx := context.Background()
 		userCreate := &models.UserCreate{
-			ID:          "1",
 			FirstName:   "Albert",
 			LastName:    "Guss",
 			MobilePhone: "+8748327432",
@@ -170,7 +165,7 @@ func TestUserService_Upload(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		userStore := mock_store.NewMockUser(ctrl)
+		userStore := mock_service.NewMockUser(ctrl)
 
 		data := "FirstName;SecondName;MobilePhone;Email\nAlbert;Guss;+8748327432;al@gmail.com\n"
 		buf := bytes.NewBuffer([]byte(data))
@@ -185,10 +180,9 @@ func TestUserService_Upload(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		userStore := mock_store.NewMockUser(ctrl)
+		userStore := mock_service.NewMockUser(ctrl)
 		ctx := context.Background()
 		userCreate := &models.UserCreate{
-			ID:          "1",
 			FirstName:   "Albert",
 			LastName:    "Guss",
 			MobilePhone: "+8748327432",

@@ -24,7 +24,7 @@ func NewMessage(db *bun.DB) service.Message {
 // Create creates the struct of a message in the database.
 // It takes in a context, the new struct of the message.
 // It returns an error if the create operation fails.
-func (s *messageStore) Create(ctx context.Context, m *service.MessageEntity) error {
+func (s *messageStore) Create(ctx context.Context, m *models.MessageEntity) error {
 	_, err := s.db.
 		NewInsert().
 		Model(m).
@@ -41,7 +41,7 @@ func (s *messageStore) Create(ctx context.Context, m *service.MessageEntity) err
 func (s *messageStore) UpdateStatus(ctx context.Context, id uuid.UUID, status models.MessageStatus) error {
 	exec, err := s.db.
 		NewUpdate().
-		Model(&service.TemplateEntity{}).
+		Model(&models.TemplateEntity{}).
 		Set("status = ?", string(status)).
 		Where("id = ?", id).
 		Exec(ctx)

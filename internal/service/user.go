@@ -5,8 +5,6 @@ import (
 	"encoding/csv"
 	"errors"
 	"fmt"
-	"github.com/google/uuid"
-	"github.com/uptrace/bun"
 	"io"
 	"projects/emergency-messages/internal/logging"
 	"projects/emergency-messages/internal/models"
@@ -20,19 +18,9 @@ type UserService struct {
 	log       logging.Logger
 }
 
-type UserEntity struct {
-	bun.BaseModel `bun:"table:users,alias:u"`
-	ID            uuid.UUID `bun:"type:uuid,primarykey"`
-	FirstName     string    `bun:"first_name,notnull"`
-	LastName      string    `bun:"last_name,notnull"`
-	MobilePhone   string    `bun:"mobile_phone"`
-	Email         string    `bun:"email"`
-	City          string    `bun:"city,notnull"`
-}
-
 type User interface {
-	Create(ctx context.Context, user *UserEntity) error
-	FindByCity(ctx context.Context, city string) ([]UserEntity, error)
+	Create(ctx context.Context, user *models.UserEntity) error
+	FindByCity(ctx context.Context, city string) ([]models.UserEntity, error)
 }
 
 func NewUserService(userStore User, log logging.Logger) UserService {
@@ -74,7 +62,6 @@ func (s *UserService) Upload(csvData io.Reader) ([]*models.UserCreate, error) {
 	result := make([]*models.UserCreate, 0, len(users))
 
 	for _, user := range users {
-		user.ID = uuid.New()
 		userStore, err := s.transformUserCreateToStoreModel(user)
 		if err != nil {
 			s.log.Error(err)
@@ -141,11 +128,10 @@ func (s *UserService) getUsersFromCSV(csvData io.Reader) ([]*models.UserCreate, 
 	return users, nil
 }
 
-func (s *UserService) transformStoreModelsByCityToUsers(usersStore []UserEntity) ([]models.User, error) {
+func (s *UserService) transformStoreModelsByCityToUsers(usersStore []models.UserEntity) ([]models.User, error) {
 	users := make([]models.User, len(usersStore))
 	for _, u := range usersStore {
 		user := models.User{
-			ID:          u.ID,
 			FirstName:   u.FirstName,
 			LastName:    u.LastName,
 			MobilePhone: u.MobilePhone,
@@ -157,9 +143,8 @@ func (s *UserService) transformStoreModelsByCityToUsers(usersStore []UserEntity)
 	return users, nil
 }
 
-func (s *UserService) transformUserCreateToStoreModel(u *models.UserCreate) (*UserEntity, error) {
-	return &UserEntity{
-		ID:          u.ID,
+func (s *UserService) transformUserCreateToStoreModel(u *models.UserCreate) (*models.UserEntity, error) {
+	return &models.UserEntity{
 		FirstName:   u.FirstName,
 		LastName:    u.LastName,
 		MobilePhone: u.MobilePhone,
@@ -168,7 +153,7 @@ func (s *UserService) transformUserCreateToStoreModel(u *models.UserCreate) (*Us
 	}, nil
 }
 
-func (s *UserService) transformStoreModelToUser(u *UserEntity) (*models.UserCreate, error) {
+func (s *UserService) transformStoreModelToUser(u *models.UserEntity) (*models.UserCreate, error) {
 	return &models.UserCreate{
 		ID:          u.ID,
 		FirstName:   u.FirstName,

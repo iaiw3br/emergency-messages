@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"fmt"
+	"projects/emergency-messages/internal/models"
 	"projects/emergency-messages/internal/service"
 
 	"github.com/uptrace/bun"
@@ -21,7 +22,7 @@ func NewUserStore(db *bun.DB) service.User {
 // Create creates the struct of a user in the database.
 // It takes in a context, the new struct of the user.
 // It returns an error if the create operation fails.
-func (s *userStore) Create(ctx context.Context, u *service.UserEntity) error {
+func (s *userStore) Create(ctx context.Context, u *models.UserEntity) error {
 	_, err := s.db.
 		NewInsert().
 		Model(u).
@@ -36,8 +37,8 @@ func (s *userStore) Create(ctx context.Context, u *service.UserEntity) error {
 // FindByCity retrieves users from the database by city.
 // It takes in a context and the city of the user.
 // It returns users and an error if the retrieval operation fails.
-func (s *userStore) FindByCity(ctx context.Context, city string) ([]service.UserEntity, error) {
-	entities := make([]service.UserEntity, 0)
+func (s *userStore) FindByCity(ctx context.Context, city string) ([]models.UserEntity, error) {
+	entities := make([]models.UserEntity, 0)
 
 	err := s.db.
 		NewSelect().

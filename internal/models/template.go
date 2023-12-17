@@ -2,6 +2,8 @@ package models
 
 import (
 	"errors"
+	"github.com/google/uuid"
+	"github.com/uptrace/bun"
 )
 
 type Template struct {
@@ -43,4 +45,11 @@ func (t *TemplateCreate) Validate() error {
 		return errors.New("text is empty")
 	}
 	return nil
+}
+
+type TemplateEntity struct {
+	bun.BaseModel `bun:"table:templates,alias:t"`
+	ID            uuid.UUID `bun:"type:uuid,default:uuid_generate_v4()"`
+	Subject       string    `bun:"subject,notnull"`
+	Text          string    `bun:"text,notnull"`
 }

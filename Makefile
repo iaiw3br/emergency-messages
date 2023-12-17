@@ -20,9 +20,9 @@ cover:
 
 .PHONY: gen
 gen:
-	mockgen -source=internal/service/message.go -destination internal/store/postgres/mock/message_mock.go
-	mockgen -source=internal/service/template.go -destination internal/store/postgres/mock/template_mock.go
-	mockgen -source=internal/service/user.go -destination internal/store/postgres/mock/user_mock.go
+	mockgen -source=internal/service/message.go -destination internal/service/mocks/message_mock.go
+	mockgen -source=internal/service/template.go -destination internal/service/mocks/template_mock.go
+	mockgen -source=internal/service/user.go -destination internal/service/mocks/user_mock.go
 
 migrate-create:
 	 migrate create -ext sql -dir internal/migration $(name)

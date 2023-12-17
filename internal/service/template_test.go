@@ -3,7 +3,8 @@ package service
 import (
 	"context"
 	"errors"
-	mock_store "projects/emergency-messages/internal/store/postgres/mock"
+	"github.com/google/uuid"
+	"projects/emergency-messages/internal/service/mocks"
 	"testing"
 
 	"projects/emergency-messages/internal/logging"
@@ -18,7 +19,7 @@ func TestTemplate_Create(t *testing.T) {
 		controller := gomock.NewController(t)
 		defer controller.Finish()
 
-		store := mock_store.NewMockTemplateStore(controller)
+		store := mock_service.NewMockTemplateStore(controller)
 		template := &models.TemplateCreate{
 			Subject: "1",
 			Text:    "2",
@@ -26,10 +27,14 @@ func TestTemplate_Create(t *testing.T) {
 		ctx := context.Background()
 		log := logging.New()
 		service := NewTemplate(store, log)
+		templateStore := &models.TemplateEntity{
+			Subject: "1",
+			Text:    "2",
+		}
 
 		store.
 			EXPECT().
-			Create(ctx, template).
+			Create(ctx, templateStore).
 			Return(nil)
 
 		err := service.Create(ctx, template)
@@ -39,7 +44,7 @@ func TestTemplate_Create(t *testing.T) {
 		controller := gomock.NewController(t)
 		defer controller.Finish()
 
-		store := mock_store.NewMockTemplateStore(controller)
+		store := mock_service.NewMockTemplateStore(controller)
 		template := &models.TemplateCreate{
 			Text: "2",
 		}
@@ -54,7 +59,7 @@ func TestTemplate_Create(t *testing.T) {
 		controller := gomock.NewController(t)
 		defer controller.Finish()
 
-		store := mock_store.NewMockTemplateStore(controller)
+		store := mock_service.NewMockTemplateStore(controller)
 		template := &models.TemplateCreate{
 			Subject: "2",
 		}
@@ -69,10 +74,14 @@ func TestTemplate_Create(t *testing.T) {
 		controller := gomock.NewController(t)
 		defer controller.Finish()
 
-		store := mock_store.NewMockTemplateStore(controller)
+		store := mock_service.NewMockTemplateStore(controller)
 		template := &models.TemplateCreate{
 			Text:    "2",
 			Subject: "2",
+		}
+		templateStore := &models.TemplateEntity{
+			Subject: template.Subject,
+			Text:    template.Text,
 		}
 		ctx := context.Background()
 		log := logging.New()
@@ -80,7 +89,7 @@ func TestTemplate_Create(t *testing.T) {
 
 		store.
 			EXPECT().
-			Create(ctx, template).
+			Create(ctx, templateStore).
 			Return(errors.New("")).
 			AnyTimes()
 
@@ -94,7 +103,7 @@ func TestNewTemplate(t *testing.T) {
 	defer controller.Finish()
 
 	log := logging.New()
-	store := mock_store.NewMockTemplateStore(controller)
+	store := mock_service.NewMockTemplateStore(controller)
 	res := NewTemplate(store, log)
 	assert.NotNil(t, res)
 	assert.Equal(t, store, res.templateStore)
@@ -107,17 +116,21 @@ func TestTemplate_Delete(t *testing.T) {
 		defer controller.Finish()
 
 		ctx := context.Background()
-		store := mock_store.NewMockTemplateStore(controller)
+		store := mock_service.NewMockTemplateStore(controller)
+
+		uidStr := "9dfc0a1d-7582-40eb-bc50-53a973bd1dbf"
+		uid, err := uuid.Parse(uidStr)
+		assert.NoError(t, err)
 
 		store.
 			EXPECT().
-			Delete(ctx, "11111").
+			Delete(ctx, uid).
 			Return(nil)
 
 		log := logging.New()
 		service := NewTemplate(store, log)
 
-		err := service.Delete(ctx, "11111")
+		err = service.Delete(ctx, uidStr)
 		assert.NoError(t, err)
 	})
 	t.Run("when store returns error then error", func(t *testing.T) {
@@ -125,17 +138,21 @@ func TestTemplate_Delete(t *testing.T) {
 		defer controller.Finish()
 
 		ctx := context.Background()
-		store := mock_store.NewMockTemplateStore(controller)
+		store := mock_service.NewMockTemplateStore(controller)
+
+		uidStr := "9dfc0a1d-7582-40eb-bc50-53a973bd1dbf"
+		uid, err := uuid.Parse(uidStr)
+		assert.NoError(t, err)
 
 		store.
 			EXPECT().
-			Delete(ctx, "11111").
+			Delete(ctx, uid).
 			Return(errors.New(""))
 
 		log := logging.New()
 		service := NewTemplate(store, log)
 
-		err := service.Delete(ctx, "11111")
+		err = service.Delete(ctx, uidStr)
 		assert.Error(t, err)
 	})
 }
@@ -146,22 +163,31 @@ func TestTemplate_Update(t *testing.T) {
 		defer controller.Finish()
 
 		ctx := context.Background()
-		store := mock_store.NewMockTemplateStore(controller)
+		store := mock_service.NewMockTemplateStore(controller)
+
+		uidStr := "9dfc0a1d-7582-40eb-bc50-53a973bd1dbf"
+		uid, err := uuid.Parse(uidStr)
+		assert.NoError(t, err)
 		updateTemplate := &models.TemplateUpdate{
-			ID:      "1",
+			ID:      uidStr,
 			Subject: "1",
 			Text:    "2",
+		}
+		templateStore := &models.TemplateEntity{
+			ID:      uid,
+			Subject: updateTemplate.Subject,
+			Text:    updateTemplate.Text,
 		}
 
 		store.
 			EXPECT().
-			Update(ctx, updateTemplate).
+			Update(ctx, templateStore).
 			Return(nil)
 
 		log := logging.New()
 		service := NewTemplate(store, log)
 
-		err := service.Update(ctx, updateTemplate)
+		err = service.Update(ctx, updateTemplate)
 		assert.NoError(t, err)
 	})
 	t.Run("when store has error then error", func(t *testing.T) {
@@ -169,22 +195,31 @@ func TestTemplate_Update(t *testing.T) {
 		defer controller.Finish()
 
 		ctx := context.Background()
-		store := mock_store.NewMockTemplateStore(controller)
+		store := mock_service.NewMockTemplateStore(controller)
+
+		uidStr := "9dfc0a1d-7582-40eb-bc50-53a973bd1dbf"
+		uid, err := uuid.Parse(uidStr)
+		assert.NoError(t, err)
 		updateTemplate := &models.TemplateUpdate{
-			ID:      "1",
+			ID:      uidStr,
 			Subject: "1",
 			Text:    "2",
+		}
+		templateStore := &models.TemplateEntity{
+			ID:      uid,
+			Subject: updateTemplate.Subject,
+			Text:    updateTemplate.Text,
 		}
 
 		store.
 			EXPECT().
-			Update(ctx, updateTemplate).
+			Update(ctx, templateStore).
 			Return(errors.New(""))
 
 		log := logging.New()
 		service := NewTemplate(store, log)
 
-		err := service.Update(ctx, updateTemplate)
+		err = service.Update(ctx, updateTemplate)
 		assert.Error(t, err)
 	})
 	t.Run("when store has error then error", func(t *testing.T) {
@@ -192,7 +227,7 @@ func TestTemplate_Update(t *testing.T) {
 		defer controller.Finish()
 
 		ctx := context.Background()
-		store := mock_store.NewMockTemplateStore(controller)
+		store := mock_service.NewMockTemplateStore(controller)
 		updateTemplate := &models.TemplateUpdate{
 			Subject: "1",
 			Text:    "2",
