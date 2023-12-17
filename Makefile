@@ -25,10 +25,10 @@ gen:
 	mockgen -source=internal/service/user.go -destination internal/service/mocks/user_mock.go
 
 migrate-create:
-	 migrate create -ext sql -dir internal/migration $(name)
+	 migrate create -ext sql -dir internal/databases/migrations $(name)
 
 migrate-up:
-	migrate -path ./internal/migration -database $(DATABASE_URL)?sslmode=disable up
+	migrate -path ./internal/databases/migrations -database $(DATABASE_URL)?sslmode=disable up
 
 migrate-fix:
-	migrate -path ./internal/migration -database -database $(DATABASE_URL)?sslmode=disable force $(number)
+	migrate -path ./internal/databases/migrations -database -database $(DATABASE_URL)?sslmode=disable force $(number)

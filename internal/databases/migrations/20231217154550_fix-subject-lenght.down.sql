@@ -1,0 +1,3 @@
+ALTER TABLE public.templates
+ALTER COLUMN subject
+TYPE VARCHAR(50);

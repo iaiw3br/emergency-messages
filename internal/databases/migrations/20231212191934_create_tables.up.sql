@@ -1,6 +1,6 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
-CREATE TABLE IF NOT EXISTS users
+CREATE TABLE IF NOT EXISTS public.users
 (
     id      UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     first_name   VARCHAR(50) UNIQUE NOT NULL,
@@ -9,9 +9,9 @@ CREATE TABLE IF NOT EXISTS users
     mobile_phone VARCHAR(50) UNIQUE,
     city         VARCHAR(100)       NOT NULL
 );
-CREATE TYPE message_type AS ENUM ('created', 'delivered');
+CREATE TYPE public.message_type AS ENUM ('created', 'delivered');
 
-CREATE TABLE IF NOT EXISTS messages
+CREATE TABLE IF NOT EXISTS public.messages
 (
     id      UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     status  message_type NOT NULL,
@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS messages
 );
 
 
-CREATE TABLE IF NOT EXISTS templates
+CREATE TABLE IF NOT EXISTS public.templates
 (
     id      UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     subject VARCHAR(50) NOT NULL,

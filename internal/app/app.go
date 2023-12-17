@@ -58,10 +58,6 @@ func startServer(ctx context.Context) error {
 
 	registerEntities(db, logging, r)
 
-	// if err := migration.RunMigrate(url); err != nil {
-	// 	log.Fatalf("running migration: %v", err)
-	// }
-
 	go func() {
 		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			log.Fatalf("listen and serve: %v", err)
