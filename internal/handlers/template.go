@@ -1,4 +1,4 @@
-package handler
+package handlers
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"projects/emergency-messages/internal/logging"
 	"projects/emergency-messages/internal/models"
-	"projects/emergency-messages/internal/service"
+	"projects/emergency-messages/internal/services"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -24,7 +24,7 @@ type TemplateService interface {
 }
 
 type Template struct {
-	templateService service.TemplateService
+	templateService services.TemplateService
 	log             logging.Logger
 }
 
@@ -39,7 +39,7 @@ type templateCreate struct {
 	Text    string `json:"text"`
 }
 
-func NewTemplate(templateService service.TemplateService, log logging.Logger) Template {
+func NewTemplate(templateService services.TemplateService, log logging.Logger) Template {
 	return Template{
 		templateService: templateService,
 		log:             log,
@@ -123,7 +123,7 @@ func (t Template) Delete(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 
 	if err := t.templateService.Delete(ctx, id); err != nil {
-		t.log.Error("template service delete return error:", err)
+		t.log.Error("template services delete return error:", err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}

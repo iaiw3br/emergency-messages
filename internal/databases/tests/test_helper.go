@@ -3,18 +3,17 @@ package tests
 import (
 	"errors"
 	"fmt"
-	"log"
-	"os"
-	"path"
-	"path/filepath"
-	"projects/emergency-messages/pkg/client/postgres"
-
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	_ "github.com/golang-migrate/migrate/v4/source/github"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/uptrace/bun"
+	"log"
+	"os"
+	"path"
+	"path/filepath"
+	"projects/emergency-messages/internal/databases/client/postgres"
 )
 
 const (

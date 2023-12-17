@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 
 	"projects/emergency-messages/internal/models"
-	"projects/emergency-messages/internal/service"
+	"projects/emergency-messages/internal/services"
 
 	"github.com/uptrace/bun"
 )
@@ -15,7 +15,7 @@ type messageStore struct {
 	db *bun.DB
 }
 
-func NewMessage(db *bun.DB) service.Message {
+func NewMessage(db *bun.DB) services.Message {
 	return &messageStore{
 		db: db,
 	}

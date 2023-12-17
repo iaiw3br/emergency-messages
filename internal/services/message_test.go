@@ -1,9 +1,9 @@
-package service
+package services
 
 import (
 	"projects/emergency-messages/internal/logging"
 	"projects/emergency-messages/internal/providers/email/mail_gun"
-	mock_service "projects/emergency-messages/internal/service/mocks"
+	mock_service "projects/emergency-messages/internal/services/mocks"
 	"testing"
 
 	"github.com/stretchr/testify/assert"

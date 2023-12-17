@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"projects/emergency-messages/internal/models"
-	"projects/emergency-messages/internal/service"
+	"projects/emergency-messages/internal/services"
 
 	"github.com/uptrace/bun"
 )
@@ -13,7 +13,7 @@ type userStore struct {
 	db *bun.DB
 }
 
-func NewUserStore(db *bun.DB) service.User {
+func NewUserStore(db *bun.DB) services.User {
 	return &userStore{
 		db: db,
 	}

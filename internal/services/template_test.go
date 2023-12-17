@@ -1,10 +1,10 @@
-package service
+package services
 
 import (
 	"context"
 	"errors"
 	"github.com/google/uuid"
-	"projects/emergency-messages/internal/service/mocks"
+	"projects/emergency-messages/internal/services/mocks"
 	"testing"
 
 	"projects/emergency-messages/internal/logging"
@@ -111,7 +111,7 @@ func TestNewTemplate(t *testing.T) {
 }
 
 func TestTemplate_Delete(t *testing.T) {
-	t.Run("when store doesn't return error then no error", func(t *testing.T) {
+	t.Run("when stores doesn't return error then no error", func(t *testing.T) {
 		controller := gomock.NewController(t)
 		defer controller.Finish()
 
@@ -133,7 +133,7 @@ func TestTemplate_Delete(t *testing.T) {
 		err = service.Delete(ctx, uidStr)
 		assert.NoError(t, err)
 	})
-	t.Run("when store returns error then error", func(t *testing.T) {
+	t.Run("when stores returns error then error", func(t *testing.T) {
 		controller := gomock.NewController(t)
 		defer controller.Finish()
 
@@ -190,7 +190,7 @@ func TestTemplate_Update(t *testing.T) {
 		err = service.Update(ctx, updateTemplate)
 		assert.NoError(t, err)
 	})
-	t.Run("when store has error then error", func(t *testing.T) {
+	t.Run("when stores has error then error", func(t *testing.T) {
 		controller := gomock.NewController(t)
 		defer controller.Finish()
 
@@ -222,7 +222,7 @@ func TestTemplate_Update(t *testing.T) {
 		err = service.Update(ctx, updateTemplate)
 		assert.Error(t, err)
 	})
-	t.Run("when store has error then error", func(t *testing.T) {
+	t.Run("when stores has error then error", func(t *testing.T) {
 		controller := gomock.NewController(t)
 		defer controller.Finish()
 

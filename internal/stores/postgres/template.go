@@ -6,14 +6,14 @@ import (
 	"github.com/google/uuid"
 	"github.com/uptrace/bun"
 	"projects/emergency-messages/internal/models"
-	"projects/emergency-messages/internal/service"
+	"projects/emergency-messages/internal/services"
 )
 
 type templateStore struct {
 	db *bun.DB
 }
 
-func NewTemplate(db *bun.DB) service.TemplateStore {
+func NewTemplate(db *bun.DB) services.TemplateStore {
 	return &templateStore{
 		db: db,
 	}

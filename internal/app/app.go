@@ -9,13 +9,13 @@ import (
 	"os"
 	"os/signal"
 	"projects/emergency-messages/internal/config"
-	"projects/emergency-messages/internal/handler"
+	client "projects/emergency-messages/internal/databases/client/postgres"
+	"projects/emergency-messages/internal/handlers"
 	"projects/emergency-messages/internal/logging"
-	mdlware "projects/emergency-messages/internal/middleware"
+	mdlware "projects/emergency-messages/internal/middlewares"
 	mailg "projects/emergency-messages/internal/providers/email/mail_gun"
-	"projects/emergency-messages/internal/service"
-	"projects/emergency-messages/internal/store/postgres"
-	client "projects/emergency-messages/pkg/client/postgres"
+	"projects/emergency-messages/internal/services"
+	"projects/emergency-messages/internal/stores/postgres"
 	"syscall"
 	"time"
 
@@ -110,19 +110,19 @@ func registerEntities(db *bun.DB, l logging.Logger, r *chi.Mux) {
 	r.Use(middleware.Timeout(contextTimeout))
 
 	userStore := postgres.NewUserStore(db)
-	userService := service.NewUserService(userStore, l)
-	userHandler := handler.NewUser(userService, l)
+	userService := services.NewUserService(userStore, l)
+	userHandler := handlers.NewUser(userService, l)
 	userHandler.Register(r)
 
 	templateStore := postgres.NewTemplate(db)
-	templateService := service.NewTemplate(templateStore, l)
-	templateHandler := handler.NewTemplate(templateService, l)
+	templateService := services.NewTemplate(templateStore, l)
+	templateHandler := handlers.NewTemplate(templateService, l)
 	templateHandler.Register(r)
 
 	mailg := mailg.New(l)
 
 	messageStore := postgres.NewMessage(db)
-	messageService := service.NewMessage(messageStore, templateStore, userStore, mailg, l)
-	messageHandler := handler.NewMessage(messageService, l)
+	messageService := services.NewMessage(messageStore, templateStore, userStore, mailg, l)
+	messageHandler := handlers.NewMessage(messageService, l)
 	messageHandler.Register(r)
 }

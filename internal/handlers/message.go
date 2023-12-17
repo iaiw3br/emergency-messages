@@ -1,4 +1,4 @@
-package handler
+package handlers
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"projects/emergency-messages/internal/logging"
 	"projects/emergency-messages/internal/models"
-	"projects/emergency-messages/internal/service"
+	"projects/emergency-messages/internal/services"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -15,11 +15,11 @@ import (
 const messages = "/messages"
 
 type MessageController struct {
-	messageService *service.MessageService
+	messageService *services.MessageService
 	log            logging.Logger
 }
 
-func NewMessage(messageService *service.MessageService, log logging.Logger) *MessageController {
+func NewMessage(messageService *services.MessageService, log logging.Logger) *MessageController {
 	return &MessageController{
 		messageService: messageService,
 		log:            log,

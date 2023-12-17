@@ -1,4 +1,4 @@
-package handler
+package handlers
 
 import (
 	"context"
@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"projects/emergency-messages/internal/logging"
-	"projects/emergency-messages/internal/service"
+	"projects/emergency-messages/internal/services"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -14,7 +14,7 @@ import (
 const users = "/users"
 
 type UserController struct {
-	userService service.UserService
+	userService services.UserService
 	log         logging.Logger
 }
 
@@ -23,7 +23,7 @@ func (u UserController) Register(r *chi.Mux) {
 	r.Post(fmt.Sprintf("%s/upload", users), u.Upload)
 }
 
-func NewUser(userService service.UserService, log logging.Logger) UserController {
+func NewUser(userService services.UserService, log logging.Logger) UserController {
 	return UserController{
 		userService: userService,
 		log:         log,

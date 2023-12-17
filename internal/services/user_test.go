@@ -1,4 +1,4 @@
-package service
+package services
 
 import (
 	"bytes"
@@ -6,7 +6,7 @@ import (
 	"errors"
 	"projects/emergency-messages/internal/logging"
 	"projects/emergency-messages/internal/models"
-	"projects/emergency-messages/internal/service/mocks"
+	"projects/emergency-messages/internal/services/mocks"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -15,7 +15,7 @@ import (
 
 func TestUserService_GetByCity(t *testing.T) {
 	t.Skip()
-	t.Run("when have city and service without error then no error", func(t *testing.T) {
+	t.Run("when have city and services without error then no error", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
@@ -57,7 +57,7 @@ func TestUserService_GetByCity(t *testing.T) {
 		assert.Error(t, err)
 		assert.Nil(t, users)
 	})
-	t.Run("when have city, but store return error then error", func(t *testing.T) {
+	t.Run("when have city, but stores return error then error", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
@@ -176,7 +176,7 @@ func TestUserService_Upload(t *testing.T) {
 		assert.Error(t, err)
 		assert.Nil(t, users)
 	})
-	t.Run("when csv is valid, but store returns error then error", func(t *testing.T) {
+	t.Run("when csv is valid, but stores returns error then error", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
