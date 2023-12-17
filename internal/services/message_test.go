@@ -1,24 +1,25 @@
-package service
+package services
 
 import (
-	"github.com/emergency-messages/internal/logging"
-	mailg "github.com/emergency-messages/internal/providers/email/mailgun"
-	mock_store "github.com/emergency-messages/internal/store/postgres/mock"
+	"projects/emergency-messages/internal/logging"
+	"projects/emergency-messages/internal/providers/email/mail_gun"
+	mock_service "projects/emergency-messages/internal/services/mocks"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
-	"testing"
 )
 
 func TestNewMessage(t *testing.T) {
 	controller := gomock.NewController(t)
 	defer controller.Finish()
 
-	messageStore := mock_store.NewMockMessager(controller)
-	templateStore := mock_store.NewMockTemplateStore(controller)
-	userStore := mock_store.NewMockUser(controller)
+	messageStore := mock_service.NewMockMessage(controller)
+	templateStore := mock_service.NewMockTemplateStore(controller)
+	userStore := mock_service.NewMockUser(controller)
 
 	log := logging.New()
-	email := mailg.New(log)
+	email := mail_gun.New(log)
 
 	res := NewMessage(messageStore, templateStore, userStore, email, log)
 	assert.NotNil(t, res)

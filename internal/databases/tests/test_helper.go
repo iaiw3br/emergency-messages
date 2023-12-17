@@ -3,7 +3,6 @@ package tests
 import (
 	"errors"
 	"fmt"
-	"github.com/emergency-messages/pkg/client/postgres"
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
@@ -14,6 +13,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"projects/emergency-messages/internal/databases/client/postgres"
 )
 
 const (
@@ -49,7 +49,7 @@ func getDatabase() (*bun.DB, error) {
 // migrateDB drop all tables and create tables for testing
 func migrateDB() error {
 	f, _ := os.Getwd()
-	sourceURL := path.Join(filepath.Dir(f), "migration", "test_migration")
+	sourceURL := path.Join(filepath.Dir(f), "migrations", "test_migrations")
 	databaseURL := dbURL + "?sslmode=disable"
 	m, err := migrate.New(fmt.Sprintf("file:%s", sourceURL), databaseURL)
 	if err != nil {
@@ -67,7 +67,7 @@ func migrateDB() error {
 		return err
 	}
 
-	log.Println("migration done")
+	log.Println("migrations done")
 
 	return nil
 }

@@ -1,12 +1,14 @@
-module github.com/emergency-messages
+module projects/emergency-messages
 
 go 1.20
 
 require (
 	github.com/go-chi/chi/v5 v5.0.10
+	github.com/golang-migrate/migrate v3.5.4+incompatible
 	github.com/golang-migrate/migrate/v4 v4.16.2
-	github.com/google/uuid v1.4.0
-	github.com/jackc/pgx/v5 v5.5.0
+	github.com/google/uuid v1.5.0
+	github.com/jackc/pgx v3.6.2+incompatible
+	github.com/jackc/pgx/v5 v5.5.1
 	github.com/joho/godotenv v1.5.1
 	github.com/mailgun/mailgun-go v2.0.0+incompatible
 	github.com/sirupsen/logrus v1.9.3
@@ -18,18 +20,22 @@ require (
 )
 
 require (
+	github.com/cockroachdb/apd v1.1.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/facebookgo/ensure v0.0.0-20200202191622-63f1cf65ac4c // indirect
 	github.com/facebookgo/stack v0.0.0-20160209184415-751773369052 // indirect
 	github.com/facebookgo/subset v0.0.0-20200203212716-c811ad88dec4 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/gobuffalo/envy v1.10.2 // indirect
+	github.com/gofrs/uuid v4.4.0+incompatible // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
+	github.com/google/go-github v17.0.0+incompatible // indirect
 	github.com/google/go-github/v39 v39.2.0 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
+	github.com/jackc/fake v0.0.0-20150926172116-812a484cc733 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20221227161230-091c0ba34f0a // indirect
 	github.com/jackc/puddle/v2 v2.2.1 // indirect

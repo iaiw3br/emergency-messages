@@ -1,10 +1,11 @@
-package mailg
+package mail_gun
 
 import (
-	"github.com/emergency-messages/internal/logging"
-	"github.com/emergency-messages/internal/models"
-	"github.com/mailgun/mailgun-go"
 	"os"
+	"projects/emergency-messages/internal/logging"
+	"projects/emergency-messages/internal/models"
+
+	"github.com/mailgun/mailgun-go"
 )
 
 type Client struct {

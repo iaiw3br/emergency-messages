@@ -1,30 +1,30 @@
-package service
+package services
 
 import (
 	"bytes"
 	"context"
 	"errors"
-	"github.com/emergency-messages/internal/logging"
-	"github.com/emergency-messages/internal/models"
-	mockstore "github.com/emergency-messages/internal/store/postgres/mock"
+	"projects/emergency-messages/internal/logging"
+	"projects/emergency-messages/internal/models"
+	"projects/emergency-messages/internal/services/mocks"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
-	"testing"
 )
 
 func TestUserService_GetByCity(t *testing.T) {
 	t.Skip()
-	t.Run("when have city and service without error then no error", func(t *testing.T) {
+	t.Run("when have city and services without error then no error", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		userStore := mockstore.NewMockUser(ctrl)
+		userStore := mock_service.NewMockUser(ctrl)
 		ctx := context.Background()
 		city := "Moscow"
 
 		wantReturn := []models.User{
 			{
-				ID:          "1",
 				FirstName:   "Albert",
 				LastName:    "Guss",
 				MobilePhone: "+8748327432",
@@ -47,7 +47,7 @@ func TestUserService_GetByCity(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		userStore := mockstore.NewMockUser(ctrl)
+		userStore := mock_service.NewMockUser(ctrl)
 		ctx := context.Background()
 		city := ""
 
@@ -57,11 +57,11 @@ func TestUserService_GetByCity(t *testing.T) {
 		assert.Error(t, err)
 		assert.Nil(t, users)
 	})
-	t.Run("when have city, but store return error then error", func(t *testing.T) {
+	t.Run("when have city, but stores return error then error", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		userStore := mockstore.NewMockUser(ctrl)
+		userStore := mock_service.NewMockUser(ctrl)
 		ctx := context.Background()
 		city := "Sao Paulo"
 
@@ -84,10 +84,9 @@ func TestUserService_Upload(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		userStore := mockstore.NewMockUser(ctrl)
+		userStore := mock_service.NewMockUser(ctrl)
 		ctx := context.Background()
 		userCreate := &models.UserCreate{
-			ID:          "111",
 			FirstName:   "Albert",
 			LastName:    "Guss",
 			MobilePhone: "+8748327432",
@@ -112,10 +111,9 @@ func TestUserService_Upload(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		userStore := mockstore.NewMockUser(ctrl)
+		userStore := mock_service.NewMockUser(ctrl)
 		ctx := context.Background()
 		userCreate := &models.UserCreate{
-			ID:          "0e9876fa-b3f2-4d81-9fc9-182641bfa8b0",
 			FirstName:   "Albert",
 			LastName:    "Guss",
 			MobilePhone: "+8748327432",
@@ -140,10 +138,9 @@ func TestUserService_Upload(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		userStore := mockstore.NewMockUser(ctrl)
+		userStore := mock_service.NewMockUser(ctrl)
 		ctx := context.Background()
 		userCreate := &models.UserCreate{
-			ID:          "1",
 			FirstName:   "Albert",
 			LastName:    "Guss",
 			MobilePhone: "+8748327432",
@@ -168,7 +165,7 @@ func TestUserService_Upload(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		userStore := mockstore.NewMockUser(ctrl)
+		userStore := mock_service.NewMockUser(ctrl)
 
 		data := "FirstName;SecondName;MobilePhone;Email\nAlbert;Guss;+8748327432;al@gmail.com\n"
 		buf := bytes.NewBuffer([]byte(data))
@@ -179,14 +176,13 @@ func TestUserService_Upload(t *testing.T) {
 		assert.Error(t, err)
 		assert.Nil(t, users)
 	})
-	t.Run("when csv is valid, but store returns error then error", func(t *testing.T) {
+	t.Run("when csv is valid, but stores returns error then error", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		userStore := mockstore.NewMockUser(ctrl)
+		userStore := mock_service.NewMockUser(ctrl)
 		ctx := context.Background()
 		userCreate := &models.UserCreate{
-			ID:          "1",
 			FirstName:   "Albert",
 			LastName:    "Guss",
 			MobilePhone: "+8748327432",

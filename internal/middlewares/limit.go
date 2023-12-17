@@ -1,12 +1,13 @@
-package middleware
+package middlewares
 
 import (
-	"golang.org/x/time/rate"
 	"log"
 	"net"
 	"net/http"
 	"sync"
 	"time"
+
+	"golang.org/x/time/rate"
 )
 
 const (

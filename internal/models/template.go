@@ -3,14 +3,13 @@ package models
 import (
 	"errors"
 	"github.com/google/uuid"
-	"time"
+	"github.com/uptrace/bun"
 )
 
 type Template struct {
-	ID      string    `json:"id"`
-	Subject string    `json:"subject"`
-	Text    string    `json:"text"`
-	Created time.Time `json:"created"`
+	ID      string `json:"id"`
+	Subject string `json:"subject"`
+	Text    string `json:"text"`
 }
 
 type TemplateUpdate struct {
@@ -36,7 +35,6 @@ type TemplateCreate struct {
 	ID      string
 	Subject string
 	Text    string
-	Created time.Time
 }
 
 func (t *TemplateCreate) Validate() error {
@@ -49,7 +47,9 @@ func (t *TemplateCreate) Validate() error {
 	return nil
 }
 
-func (t *TemplateCreate) Create(now time.Time) {
-	t.ID = uuid.New().String()
-	t.Created = now
+type TemplateEntity struct {
+	bun.BaseModel `bun:"table:templates,alias:t"`
+	ID            uuid.UUID `bun:"type:uuid,default:uuid_generate_v4()"`
+	Subject       string    `bun:"subject,notnull"`
+	Text          string    `bun:"text,notnull"`
 }
