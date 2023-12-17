@@ -3,60 +3,101 @@ package service
 import (
 	"context"
 	"errors"
-	"github.com/emergency-messages/internal/logging"
-	"github.com/emergency-messages/internal/models"
-	"time"
+	"fmt"
+	"github.com/google/uuid"
+	"github.com/uptrace/bun"
+	"projects/emergency-messages/internal/logging"
+	"projects/emergency-messages/internal/models"
 )
 
-type Template struct {
+type TemplateService struct {
 	templateStore TemplateStore
 	log           logging.Logger
 }
 
-type TemplateStore interface {
-	Create(ctx context.Context, template *models.TemplateCreate) error
-	Update(ctx context.Context, template *models.TemplateUpdate) error
-	Delete(ctx context.Context, id string) error
-	GetByID(ctx context.Context, id string) (*models.Template, error)
+type TemplateEntity struct {
+	bun.BaseModel `bun:"table:templates,alias:t"`
+	ID            uuid.UUID `bun:"type:uuid,primarykey"`
+	Subject       string    `bun:"subject,notnull"`
+	Text          string    `bun:"text,notnull"`
 }
 
-func NewTemplate(templateStore TemplateStore, log logging.Logger) Template {
-	return Template{
+type TemplateStore interface {
+	Create(ctx context.Context, t *TemplateEntity) error
+	Update(ctx context.Context, t *TemplateEntity) error
+	Delete(ctx context.Context, id uuid.UUID) error
+	GetByID(ctx context.Context, id uuid.UUID) (*TemplateEntity, error)
+}
+
+func NewTemplate(templateStore TemplateStore, log logging.Logger) TemplateService {
+	return TemplateService{
 		templateStore: templateStore,
 		log:           log,
 	}
 }
 
-// Create a new template
-func (t Template) Create(ctx context.Context, template *models.TemplateCreate) error {
+func (s *TemplateService) Create(ctx context.Context, template *models.TemplateCreate) error {
 	if err := template.Validate(); err != nil {
-		t.log.Error(err)
+		s.log.Error(err)
 		return err
 	}
 
-	template.Create(time.Now())
+	storeModel, err := s.transformTemplateCreateToStoreModel(template)
+	if err != nil {
+		s.log.Error(err)
+		return err
+	}
 
-	if err := t.templateStore.Create(ctx, template); err != nil {
-		t.log.Errorf("cannot create template %v", template)
+	if err = s.templateStore.Create(ctx, storeModel); err != nil {
+		s.log.Error(err)
 		return err
 	}
 
 	return nil
 }
 
-// Delete template by id
-func (t Template) Delete(ctx context.Context, id string) error {
+func (s *TemplateService) Delete(ctx context.Context, id string) error {
 	if id == "" {
-		return errors.New("id is empty")
+		return errors.New("deleting template: id is empty")
 	}
-	return t.templateStore.Delete(ctx, id)
+	uuidValue, err := uuid.Parse(id)
+	if err != nil {
+		return fmt.Errorf("deleting template: couldn't parse id: %s to UUID. Error: %w", id, err)
+	}
+	return s.templateStore.Delete(ctx, uuidValue)
 }
 
-// Update template
-func (t Template) Update(ctx context.Context, template *models.TemplateUpdate) error {
+func (s *TemplateService) Update(ctx context.Context, template *models.TemplateUpdate) error {
 	if err := template.Validate(); err != nil {
-		t.log.Error(err)
+		s.log.Error(err)
 		return err
 	}
-	return t.templateStore.Update(ctx, template)
+	storeModel, err := s.transformTemplateUpdateToStoreModel(template)
+	if err != nil {
+		s.log.Error(err)
+		return err
+	}
+	return s.templateStore.Update(ctx, storeModel)
+}
+
+func (s *TemplateService) transformTemplateCreateToStoreModel(t *models.TemplateCreate) (*TemplateEntity, error) {
+	storeModel := &TemplateEntity{
+		ID:      uuid.New(),
+		Subject: t.Subject,
+		Text:    t.Text,
+	}
+	return storeModel, nil
+}
+
+func (s *TemplateService) transformTemplateUpdateToStoreModel(t *models.TemplateUpdate) (*TemplateEntity, error) {
+	uuidValue, err := uuid.Parse(t.ID)
+	if err != nil {
+		return nil, fmt.Errorf("updating template: couldn't parse id: %s to UUID. Error: %w", t.ID, err)
+	}
+	storeModel := &TemplateEntity{
+		ID:      uuidValue,
+		Subject: t.Subject,
+		Text:    t.Text,
+	}
+	return storeModel, nil
 }

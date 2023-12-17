@@ -1,3 +1,5 @@
 DROP TABLE IF EXISTS templates;
 DROP TABLE IF EXISTS messages;
 DROP TABLE IF EXISTS users;
+
+DROP TYPE IF EXISTS message_type;

@@ -2,27 +2,14 @@ package postgres
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"github.com/emergency-messages/internal/models"
-	"github.com/emergency-messages/internal/service"
+	"projects/emergency-messages/internal/service"
+
 	"github.com/uptrace/bun"
-	"time"
 )
 
 type userStore struct {
 	db *bun.DB
-}
-
-type userEntity struct {
-	bun.BaseModel `bun:"table:users,alias:u"`
-	ID            string    `bun:"id,type:uuid"`
-	FirstName     string    `bun:"first_name,notnull"`
-	LastName      string    `bun:"last_name,notnull"`
-	MobilePhone   string    `bun:"mobile_phone"`
-	Email         string    `bun:"email"`
-	City          string    `bun:"city,notnull"`
-	Created       time.Time `json:"created"`
 }
 
 func NewUserStore(db *bun.DB) service.User {
@@ -31,57 +18,39 @@ func NewUserStore(db *bun.DB) service.User {
 	}
 }
 
-// Create user
-func (s *userStore) Create(ctx context.Context, user *models.UserCreate) error {
-	entity := userEntity{
-		ID:          user.ID,
-		FirstName:   user.FirstName,
-		LastName:    user.LastName,
-		MobilePhone: user.MobilePhone,
-		Email:       user.Email,
-		City:        user.City,
-	}
-
-	_, err := s.db.NewInsert().
-		Model(&entity).
+// Create creates the struct of a user in the database.
+// It takes in a context, the new struct of the user.
+// It returns an error if the create operation fails.
+func (s *userStore) Create(ctx context.Context, u *service.UserEntity) error {
+	_, err := s.db.
+		NewInsert().
+		Model(u).
 		Exec(ctx)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("creating user: couldn't create: %v. Error: %w", u, err)
 	}
 	return nil
 }
 
-// FindByCity find all users by city
-func (s *userStore) FindByCity(ctx context.Context, city string) ([]models.User, error) {
-	entities := make([]userEntity, 0)
+// FindByCity retrieves users from the database by city.
+// It takes in a context and the city of the user.
+// It returns users and an error if the retrieval operation fails.
+func (s *userStore) FindByCity(ctx context.Context, city string) ([]service.UserEntity, error) {
+	entities := make([]service.UserEntity, 0)
 
-	_, err := s.db.NewSelect().
+	err := s.db.
+		NewSelect().
 		Model(&entities).
 		Where("city = ?", city).
-		Exec(ctx)
-
+		Scan(ctx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("finding users by city: couldn't find users by city: %s. Error: %w", city, err)
 	}
 
 	if len(entities) == 0 {
-		return nil, errors.New(fmt.Sprintf("users were not found by city: %s", city))
+		return nil, fmt.Errorf("finding users by city: couldn't find users by city: %s", city)
 	}
 
-	result := make([]models.User, 0, len(entities))
-	for _, u := range entities {
-		user := models.User{
-			ID:          u.ID,
-			FirstName:   u.FirstName,
-			LastName:    u.LastName,
-			MobilePhone: u.MobilePhone,
-			Email:       u.Email,
-			City:        u.City,
-			Created:     u.Created,
-		}
-		result = append(result, user)
-	}
-
-	return result, nil
+	return entities, nil
 }

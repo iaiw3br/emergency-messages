@@ -2,15 +2,12 @@ package models
 
 import (
 	"errors"
-	"github.com/google/uuid"
-	"time"
 )
 
 type Template struct {
-	ID      string    `json:"id"`
-	Subject string    `json:"subject"`
-	Text    string    `json:"text"`
-	Created time.Time `json:"created"`
+	ID      string `json:"id"`
+	Subject string `json:"subject"`
+	Text    string `json:"text"`
 }
 
 type TemplateUpdate struct {
@@ -36,7 +33,6 @@ type TemplateCreate struct {
 	ID      string
 	Subject string
 	Text    string
-	Created time.Time
 }
 
 func (t *TemplateCreate) Validate() error {
@@ -47,9 +43,4 @@ func (t *TemplateCreate) Validate() error {
 		return errors.New("text is empty")
 	}
 	return nil
-}
-
-func (t *TemplateCreate) Create(now time.Time) {
-	t.ID = uuid.New().String()
-	t.Created = now
 }

@@ -3,12 +3,13 @@ package handler
 import (
 	"context"
 	"encoding/json"
-	"github.com/emergency-messages/internal/logging"
-	"github.com/emergency-messages/internal/models"
-	"github.com/emergency-messages/internal/service"
-	"github.com/go-chi/chi/v5"
 	"io"
 	"net/http"
+	"projects/emergency-messages/internal/logging"
+	"projects/emergency-messages/internal/models"
+	"projects/emergency-messages/internal/service"
+
+	"github.com/go-chi/chi/v5"
 )
 
 const messages = "/messages"

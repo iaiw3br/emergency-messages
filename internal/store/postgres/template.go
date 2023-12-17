@@ -2,24 +2,14 @@ package postgres
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"github.com/emergency-messages/internal/models"
-	"github.com/emergency-messages/internal/service"
+	"github.com/google/uuid"
 	"github.com/uptrace/bun"
-	"time"
+	"projects/emergency-messages/internal/service"
 )
 
 type templateStore struct {
 	db *bun.DB
-}
-
-type templateEntity struct {
-	bun.BaseModel `bun:"table:templates,alias:t"`
-	ID            string    `bun:"type:uuid"`
-	Subject       string    `bun:"subject,notnull"`
-	Text          string    `bun:"text,notnull"`
-	Created       time.Time `bun:"created,notnull"`
 }
 
 func NewTemplate(db *bun.DB) service.TemplateStore {
@@ -28,77 +18,79 @@ func NewTemplate(db *bun.DB) service.TemplateStore {
 	}
 }
 
-// Create template
-func (s *templateStore) Create(ctx context.Context, t *models.TemplateCreate) error {
-	entity := templateEntity{
-		ID:      t.ID,
-		Subject: t.Subject,
-		Text:    t.Text,
-		Created: t.Created,
-	}
-	_, err := s.db.NewInsert().Model(&entity).Exec(ctx)
+// Create creates the struct of a template in the database.
+// It takes in a context, the new struct of the template.
+// It returns an error if the create operation fails.
+func (s *templateStore) Create(ctx context.Context, t *service.TemplateEntity) error {
+	_, err := s.db.
+		NewInsert().
+		Model(t).
+		Exec(ctx)
 	if err != nil {
-		return err
+		return fmt.Errorf("creating template: couldn't create with: %v. Error: %w", t, err)
 	}
 	return nil
 }
 
-// Update template
-func (s *templateStore) Update(ctx context.Context, t *models.TemplateUpdate) error {
-	entity := templateEntity{
-		ID:      t.ID,
-		Subject: t.Subject,
-		Text:    t.Text,
-	}
-	exec, err := s.db.NewUpdate().
-		Model(&entity).
-		Where("id = ?", entity.ID).
+// Update updates the struct of a template in the database.
+// It takes in a context, the new struct of the template.
+// It returns an error if the update operation fails.
+func (s *templateStore) Update(ctx context.Context, t *service.TemplateEntity) error {
+	exec, err := s.db.
+		NewUpdate().
+		Model(t).
+		Where("id = ?", t.ID).
 		Exec(ctx)
 	if err != nil {
-		return err
+		return fmt.Errorf("updating template: couldn't update with id: %s. Error: %w", t.ID, err)
 	}
 	affected, err := exec.RowsAffected()
 	if err != nil {
-		return err
+		return fmt.Errorf("updating template: couldn't get the number of rows affected with id: %s. Error: %w", t.ID, err)
 	}
 	if affected == 0 {
-		return errors.New(fmt.Sprintf("template was not found by id: %s", t.ID))
+		return fmt.Errorf("updating template: couldn't find template with id: %s", t.ID)
 	}
-
 	return nil
 }
 
-// Delete template by id
-func (s *templateStore) Delete(ctx context.Context, id string) error {
-	entity := templateEntity{ID: id}
-	exec, err := s.db.NewDelete().
-		Model(&entity).
+// Delete deletes the struct of a template in the database.
+// It takes in a context and the ID of the template.
+// It returns an error if the delete operation fails.
+func (s *templateStore) Delete(ctx context.Context, id uuid.UUID) error {
+	exec, err := s.db.
+		NewDelete().
+		Model(service.TemplateEntity{}).
+		Where("id = ?", id).
 		Exec(ctx)
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting template: couldn't delete with id: %s. Error: %w", id, err)
 	}
 	affected, err := exec.RowsAffected()
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting template: couldn't get the number of rows affected with id: %s. Error: %w", id, err)
 	}
 	if affected == 0 {
-		return errors.New(fmt.Sprintf("template was not found by id: %s", id))
+		return fmt.Errorf("deleting template: couldn't find template with id: %s", id)
 	}
 	return nil
 }
 
-// GetByID find by ID and return store
-func (s *templateStore) GetByID(ctx context.Context, id string) (*models.Template, error) {
-	entity := new(templateEntity)
-	err := s.db.NewSelect().
-		Model(&entity).
+// GetByID retrieves a template from the database by its ID.
+// It takes in a context and the ID of the template.
+// It returns the template and an error if the retrieval operation fails.
+func (s *templateStore) GetByID(ctx context.Context, id uuid.UUID) (*service.TemplateEntity, error) {
+	entity := &service.TemplateEntity{ID: id}
+	err := s.db.
+		NewSelect().
+		Model(entity).
 		Where("id = ?", id).
 		Scan(ctx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("getting by id template: couldn't get template with id: %s. Error: %w", id, err)
 	}
 
-	template := &models.Template{
+	template := &service.TemplateEntity{
 		ID:      entity.ID,
 		Subject: entity.Subject,
 		Text:    entity.Text,

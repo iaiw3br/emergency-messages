@@ -4,12 +4,14 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"github.com/emergency-messages/internal/logging"
-	"github.com/emergency-messages/internal/models"
-	mockstore "github.com/emergency-messages/internal/store/postgres/mock"
+	"projects/emergency-messages/internal/logging"
+	"projects/emergency-messages/internal/models"
+	"testing"
+
+	mock_store "projects/emergency-messages/internal/store/postgres/mock"
+
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
-	"testing"
 )
 
 func TestUserService_GetByCity(t *testing.T) {
@@ -84,7 +86,7 @@ func TestUserService_Upload(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		userStore := mockstore.NewMockUser(ctrl)
+		userStore := mock_store.NewMockUser(ctrl)
 		ctx := context.Background()
 		userCreate := &models.UserCreate{
 			ID:          "111",
@@ -112,7 +114,7 @@ func TestUserService_Upload(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		userStore := mockstore.NewMockUser(ctrl)
+		userStore := mock_store.NewMockUser(ctrl)
 		ctx := context.Background()
 		userCreate := &models.UserCreate{
 			ID:          "0e9876fa-b3f2-4d81-9fc9-182641bfa8b0",
@@ -140,7 +142,7 @@ func TestUserService_Upload(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		userStore := mockstore.NewMockUser(ctrl)
+		userStore := mock_store.NewMockUser(ctrl)
 		ctx := context.Background()
 		userCreate := &models.UserCreate{
 			ID:          "1",
@@ -168,7 +170,7 @@ func TestUserService_Upload(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		userStore := mockstore.NewMockUser(ctrl)
+		userStore := mock_store.NewMockUser(ctrl)
 
 		data := "FirstName;SecondName;MobilePhone;Email\nAlbert;Guss;+8748327432;al@gmail.com\n"
 		buf := bytes.NewBuffer([]byte(data))
@@ -183,7 +185,7 @@ func TestUserService_Upload(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		userStore := mockstore.NewMockUser(ctrl)
+		userStore := mock_store.NewMockUser(ctrl)
 		ctx := context.Background()
 		userCreate := &models.UserCreate{
 			ID:          "1",

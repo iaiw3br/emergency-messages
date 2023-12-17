@@ -10,9 +10,9 @@ package mock_service
 
 import (
 	context "context"
+	models "projects/emergency-messages/internal/models"
 	reflect "reflect"
 
-	models "github.com/emergency-messages/internal/models"
 	gomock "go.uber.org/mock/gomock"
 )
 

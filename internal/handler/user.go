@@ -4,10 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/emergency-messages/internal/logging"
-	"github.com/emergency-messages/internal/service"
-	"github.com/go-chi/chi/v5"
 	"net/http"
+	"projects/emergency-messages/internal/logging"
+	"projects/emergency-messages/internal/service"
+
+	"github.com/go-chi/chi/v5"
 )
 
 const users = "/users"

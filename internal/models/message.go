@@ -1,11 +1,13 @@
 package models
 
+import "github.com/google/uuid"
+
 type Message struct {
-	ID      string        `json:"id"`
+	ID      uuid.UUID     `json:"id"`
 	Subject string        `json:"subject"`
 	Text    string        `json:"text"`
 	Status  MessageStatus `json:"status"`
-	UserID  string        `json:"user_id"`
+	UserID  uuid.UUID     `json:"user_id"`
 }
 
 type MessageStatus string
@@ -16,7 +18,7 @@ const (
 )
 
 type CreateMessage struct {
-	TemplateID string `json:"template_id"`
-	City       string `json:"city"`
-	Strength   string `json:"strength"`
+	TemplateID uuid.UUID `json:"template_id"`
+	City       string    `json:"city"`
+	Strength   string    `json:"strength"`
 }

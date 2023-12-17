@@ -5,11 +5,11 @@ import (
 	"encoding/csv"
 	"errors"
 	"fmt"
-	"github.com/emergency-messages/internal/logging"
-	"github.com/emergency-messages/internal/models"
 	"github.com/google/uuid"
+	"github.com/uptrace/bun"
 	"io"
-	"time"
+	"projects/emergency-messages/internal/logging"
+	"projects/emergency-messages/internal/models"
 )
 
 const numberOfCSVCells = 5
@@ -20,9 +20,19 @@ type UserService struct {
 	log       logging.Logger
 }
 
+type UserEntity struct {
+	bun.BaseModel `bun:"table:users,alias:u"`
+	ID            uuid.UUID `bun:"type:uuid,primarykey"`
+	FirstName     string    `bun:"first_name,notnull"`
+	LastName      string    `bun:"last_name,notnull"`
+	MobilePhone   string    `bun:"mobile_phone"`
+	Email         string    `bun:"email"`
+	City          string    `bun:"city,notnull"`
+}
+
 type User interface {
-	Create(ctx context.Context, user *models.UserCreate) error
-	FindByCity(ctx context.Context, city string) ([]models.User, error)
+	Create(ctx context.Context, user *UserEntity) error
+	FindByCity(ctx context.Context, city string) ([]UserEntity, error)
 }
 
 func NewUserService(userStore User, log logging.Logger) UserService {
@@ -32,60 +42,66 @@ func NewUserService(userStore User, log logging.Logger) UserService {
 	}
 }
 
-func (u UserService) GetByCity(ctx context.Context, city string) ([]models.User, error) {
+func (s *UserService) GetByCity(ctx context.Context, city string) ([]models.User, error) {
 	if city == "" {
 		err := errors.New("city is empty")
-		u.log.Error(err)
+		s.log.Error(err)
 		return nil, err
 	}
-	users, err := u.userStore.FindByCity(ctx, city)
+	usersStore, err := s.userStore.FindByCity(ctx, city)
 	if err != nil {
-		u.log.Error(err)
+		s.log.Error(err)
+		return nil, err
+	}
+
+	users, err := s.transformStoreModelsByCityToUsers(usersStore)
+	if err != nil {
+		s.log.Error(err)
 		return nil, err
 	}
 
 	return users, nil
 }
 
-func (u UserService) Upload(csvData io.Reader) ([]*models.UserCreate, error) {
+func (s *UserService) Upload(csvData io.Reader) ([]*models.UserCreate, error) {
 	ctx := context.Background()
-	users, err := u.getUsersFromCSV(csvData)
+	users, err := s.getUsersFromCSV(csvData)
 	if err != nil {
-		u.log.Error(err)
+		s.log.Error(err)
 		return nil, err
 	}
 
 	result := make([]*models.UserCreate, 0, len(users))
-	now := time.Now()
 
 	for _, user := range users {
-		user.ID = uuid.New().String()
-		user.Created = now
-		if err = u.userStore.Create(ctx, user); err != nil {
-			u.log.Error(err)
+		user.ID = uuid.New()
+		userStore, err := s.transformUserCreateToStoreModel(user)
+		if err != nil {
+			s.log.Error(err)
+			return nil, err
+		}
+		if err = s.userStore.Create(ctx, userStore); err != nil {
+			s.log.Error(err)
 			return nil, err
 		}
 
-		userCreated := &models.UserCreate{
-			ID:          user.ID,
-			FirstName:   user.FirstName,
-			LastName:    user.LastName,
-			MobilePhone: user.MobilePhone,
-			Email:       user.Email,
-			City:        user.City,
+		userCreated, err := s.transformStoreModelToUser(userStore)
+		if err != nil {
+			s.log.Error(err)
+			return nil, err
 		}
 		result = append(result, userCreated)
 	}
 	return result, nil
 }
 
-func (u UserService) getUsersFromCSV(csvData io.Reader) ([]*models.UserCreate, error) {
+func (s *UserService) getUsersFromCSV(csvData io.Reader) ([]*models.UserCreate, error) {
 	csvReader := csv.NewReader(csvData)
 	csvReader.Comma = semicolon
 
 	records, err := csvReader.ReadAll()
 	if err != nil {
-		u.log.Error(err)
+		s.log.Error(err)
 		return nil, err
 	}
 
@@ -123,4 +139,42 @@ func (u UserService) getUsersFromCSV(csvData io.Reader) ([]*models.UserCreate, e
 	}
 
 	return users, nil
+}
+
+func (s *UserService) transformStoreModelsByCityToUsers(usersStore []UserEntity) ([]models.User, error) {
+	users := make([]models.User, len(usersStore))
+	for _, u := range usersStore {
+		user := models.User{
+			ID:          u.ID,
+			FirstName:   u.FirstName,
+			LastName:    u.LastName,
+			MobilePhone: u.MobilePhone,
+			Email:       u.Email,
+			City:        u.City,
+		}
+		users = append(users, user)
+	}
+	return users, nil
+}
+
+func (s *UserService) transformUserCreateToStoreModel(u *models.UserCreate) (*UserEntity, error) {
+	return &UserEntity{
+		ID:          u.ID,
+		FirstName:   u.FirstName,
+		LastName:    u.LastName,
+		MobilePhone: u.MobilePhone,
+		Email:       u.Email,
+		City:        u.City,
+	}, nil
+}
+
+func (s *UserService) transformStoreModelToUser(u *UserEntity) (*models.UserCreate, error) {
+	return &models.UserCreate{
+		ID:          u.ID,
+		FirstName:   u.FirstName,
+		LastName:    u.LastName,
+		MobilePhone: u.MobilePhone,
+		Email:       u.Email,
+		City:        u.City,
+	}, nil
 }

@@ -1,12 +1,14 @@
 package service
 
 import (
-	"github.com/emergency-messages/internal/logging"
-	mailg "github.com/emergency-messages/internal/providers/email/mailgun"
-	mock_store "github.com/emergency-messages/internal/store/postgres/mock"
+	"projects/emergency-messages/internal/logging"
+	"projects/emergency-messages/internal/providers/email/mail_gun"
+	"testing"
+
+	mock_store "projects/emergency-messages/internal/store/postgres/mock"
+
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
-	"testing"
 )
 
 func TestNewMessage(t *testing.T) {
@@ -18,7 +20,7 @@ func TestNewMessage(t *testing.T) {
 	userStore := mock_store.NewMockUser(controller)
 
 	log := logging.New()
-	email := mailg.New(log)
+	email := mail_gun.New(log)
 
 	res := NewMessage(messageStore, templateStore, userStore, email, log)
 	assert.NotNil(t, res)

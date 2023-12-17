@@ -3,12 +3,14 @@ package service
 import (
 	"context"
 	"errors"
-	"github.com/emergency-messages/internal/logging"
-	"github.com/emergency-messages/internal/models"
-	mock_store "github.com/emergency-messages/internal/store/postgres/mock"
+	mock_store "projects/emergency-messages/internal/store/postgres/mock"
+	"testing"
+
+	"projects/emergency-messages/internal/logging"
+	"projects/emergency-messages/internal/models"
+
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
-	"testing"
 )
 
 func TestTemplate_Create(t *testing.T) {
