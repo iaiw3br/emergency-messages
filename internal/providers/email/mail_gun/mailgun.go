@@ -13,7 +13,7 @@ type Client struct {
 	log logging.Logger
 }
 
-func New(log logging.Logger) *Client {
+func NewEmailMailgClient(log logging.Logger) *Client {
 	apiKey := os.Getenv("EMAIL_API_KEY")
 	domain := os.Getenv("EMAIL_DOMAIN")
 

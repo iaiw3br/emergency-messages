@@ -7,6 +7,8 @@ import (
 	"projects/emergency-messages/internal/logging"
 	"projects/emergency-messages/internal/models"
 	"projects/emergency-messages/internal/providers"
+	"projects/emergency-messages/internal/providers/email/mail_gun"
+	"projects/emergency-messages/internal/providers/sms/twil"
 	"runtime"
 	"sync"
 )
@@ -31,13 +33,12 @@ type Message interface {
 	UpdateStatus(ctx context.Context, id uuid.UUID, status models.MessageStatus) error
 }
 
-func NewMessage(messageStore Message, templateStore TemplateStore, userStore User, sender providers.Sender, log logging.Logger) *MessageService {
+func NewMessage(messageStore Message, templateStore TemplateStore, userStore User, log logging.Logger) *MessageService {
 	return &MessageService{
 		messageStore:  messageStore,
 		templateStore: templateStore,
 		userStore:     userStore,
 		log:           log,
-		sender:        sender,
 	}
 }
 
@@ -95,9 +96,22 @@ func (s *MessageService) send(ctx context.Context, usersCh <-chan *models.User, 
 			continue
 		}
 
-		if err = s.sender.Send(newMessage, user.Email); err != nil {
-			s.log.Error(err)
-			continue
+		// sms
+		if user.MobilePhone != "" {
+			sms := twil.NewMobileTwilClient(s.log)
+			if err = sms.Send(newMessage, user.MobilePhone); err != nil {
+				s.log.Error(err)
+				continue
+			}
+		}
+
+		// email
+		if user.Email != "" {
+			email := mail_gun.NewEmailMailgClient(s.log)
+			if err = email.Send(newMessage, user.Email); err != nil {
+				s.log.Error(err)
+				continue
+			}
 		}
 
 		if err = s.messageStore.UpdateStatus(ctx, storeModel.ID, models.Delivered); err != nil {
