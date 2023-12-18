@@ -13,7 +13,6 @@ import (
 	"projects/emergency-messages/internal/handlers"
 	"projects/emergency-messages/internal/logging"
 	mdlware "projects/emergency-messages/internal/middlewares"
-	mailg "projects/emergency-messages/internal/providers/email/mail_gun"
 	"projects/emergency-messages/internal/services"
 	"projects/emergency-messages/internal/stores/postgres"
 	"syscall"
@@ -115,10 +114,8 @@ func registerEntities(db *bun.DB, l logging.Logger, r *chi.Mux) {
 	templateHandler := handlers.NewTemplate(templateService, l)
 	templateHandler.Register(r)
 
-	mailg := mailg.New(l)
-
 	messageStore := postgres.NewMessage(db)
-	messageService := services.NewMessage(messageStore, templateStore, userStore, mailg, l)
+	messageService := services.NewMessage(messageStore, templateStore, userStore, l)
 	messageHandler := handlers.NewMessage(messageService, l)
 	messageHandler.Register(r)
 }
