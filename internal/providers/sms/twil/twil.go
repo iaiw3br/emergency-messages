@@ -1,18 +1,19 @@
 package twil
 
 import (
-	"github.com/twilio/twilio-go"
-	twilioApi "github.com/twilio/twilio-go/rest/api/v2010"
 	"os"
 	"projects/emergency-messages/internal/logging"
 	"projects/emergency-messages/internal/models"
+
+	"github.com/twilio/twilio-go"
+	twilioApi "github.com/twilio/twilio-go/rest/api/v2010"
 )
 
-type TwilClient struct {
+type ClientTwilSMS struct {
 	log logging.Logger
 }
 
-func (c *TwilClient) Send(newMessage models.Message, phone string) error {
+func (c *ClientTwilSMS) Send(newMessage models.Message, phone string) error {
 	client := twilio.NewRestClientWithParams(twilio.ClientParams{
 		Username: os.Getenv("MOBILE_TWIL_ACCOUNT_SID"),
 		Password: os.Getenv("MOBILE_TWIL_AUTH_TOKEN"),
@@ -31,8 +32,8 @@ func (c *TwilClient) Send(newMessage models.Message, phone string) error {
 	return nil
 }
 
-func NewMobileTwilClient(log logging.Logger) *TwilClient {
-	return &TwilClient{
+func NewMobileTwilClient(log logging.Logger) *ClientTwilSMS {
+	return &ClientTwilSMS{
 		log: log,
 	}
 }

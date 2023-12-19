@@ -6,21 +6,40 @@ import (
 )
 
 type User struct {
-	ID          uuid.UUID `json:"id"`
-	FirstName   string    `json:"first_name"`
-	LastName    string    `json:"last_name"`
-	MobilePhone string    `json:"mobile_phone"`
-	Email       string    `json:"email"`
-	City        string    `json:"city"`
+	ID        uuid.UUID `json:"id"`
+	FirstName string    `json:"first_name"`
+	LastName  string    `json:"last_name"`
+	City      string    `json:"city"`
+	Contacts  []Contact `json:"contacts"`
 }
 
+type Contact struct {
+	Value    string      `json:"value"`
+	Type     ContactType `json:"type"`
+	IsActive bool        `json:"is_active"`
+}
+
+func (c *Contact) IsActiveMobilePhone() bool {
+	return c.IsActive && c.Type == ContactTypeSMS
+}
+
+func (c *Contact) IsActiveEmail() bool {
+	return c.IsActive && c.Type == ContactTypeEmail
+}
+
+type ContactType string
+
+const (
+	ContactTypeEmail ContactType = "email"
+	ContactTypeSMS   ContactType = "sms"
+)
+
 type UserCreate struct {
-	ID          uuid.UUID `json:"id"`
-	FirstName   string    `json:"first_name"`
-	LastName    string    `json:"last_name"`
-	MobilePhone string    `json:"mobile_phone"`
-	Email       string    `json:"email"`
-	City        string    `json:"city"`
+	ID        uuid.UUID `json:"id"`
+	FirstName string    `json:"first_name"`
+	LastName  string    `json:"last_name"`
+	Contacts  []Contact `json:"contacts"`
+	City      string    `json:"city"`
 }
 
 type UserEntity struct {
@@ -28,7 +47,10 @@ type UserEntity struct {
 	ID            uuid.UUID `bun:"type:uuid,default:uuid_generate_v4()"`
 	FirstName     string    `bun:"first_name,notnull"`
 	LastName      string    `bun:"last_name,notnull"`
-	MobilePhone   string    `bun:"mobile_phone"`
-	Email         string    `bun:"email"`
+	Contacts      []Contact `bun:"contacts,notnull"`
 	City          string    `bun:"city,notnull"`
+}
+
+type UserSend struct {
+	ID uuid.UUID `json:"id"`
 }
