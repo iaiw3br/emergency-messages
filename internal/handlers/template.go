@@ -122,9 +122,11 @@ func (t Template) Delete(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
 	id := chi.URLParam(r, "id")
 
-	if err := t.templateService.Delete(ctx, id); err != nil {
+	err := t.templateService.Delete(ctx, id)
+	if httpCode := assertError(err); httpCode != 0 {
 		t.log.Error("template services delete return error:", err)
-		w.WriteHeader(http.StatusBadRequest)
+		http.Error(w, http.StatusText(httpCode), httpCode)
 		return
 	}
+	w.WriteHeader(http.StatusOK)
 }

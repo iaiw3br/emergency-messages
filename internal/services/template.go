@@ -2,9 +2,11 @@ package services
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"github.com/google/uuid"
+	"projects/emergency-messages/internal/errorx"
 	"projects/emergency-messages/internal/logging"
 	"projects/emergency-messages/internal/models"
 )
@@ -50,13 +52,26 @@ func (s *TemplateService) Create(ctx context.Context, template *models.TemplateC
 
 func (s *TemplateService) Delete(ctx context.Context, id string) error {
 	if id == "" {
-		return errors.New("deleting template: id is empty")
+		s.log.Error("deleting template: uuid is empty")
+		return errorx.ErrValidation
 	}
 	uuidValue, err := uuid.Parse(id)
 	if err != nil {
-		return fmt.Errorf("deleting template: couldn't parse id: %s to UUID. Error: %w", id, err)
+		s.log.Errorf("deleting template: invalid format uuid: %s. Error: %v", id, err)
+		return errorx.ErrValidation
 	}
-	return s.templateStore.Delete(ctx, uuidValue)
+
+	if err = s.templateStore.Delete(ctx, uuidValue); err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			s.log.Errorf("deleting template: couldn't find template with id: %s", id)
+			return errorx.ErrNotFound
+		default:
+			s.log.Errorf("deleting template: error in the server: %v", err)
+			return errorx.ErrInternal
+		}
+	}
+	return nil
 }
 
 func (s *TemplateService) Update(ctx context.Context, template *models.TemplateUpdate) error {

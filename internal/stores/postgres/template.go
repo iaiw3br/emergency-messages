@@ -2,11 +2,13 @@ package postgres
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
-	"github.com/google/uuid"
-	"github.com/uptrace/bun"
 	"projects/emergency-messages/internal/models"
 	"projects/emergency-messages/internal/services"
+
+	"github.com/google/uuid"
+	"github.com/uptrace/bun"
 )
 
 type templateStore struct {
@@ -61,7 +63,7 @@ func (s *templateStore) Update(ctx context.Context, t *models.TemplateEntity) er
 func (s *templateStore) Delete(ctx context.Context, id uuid.UUID) error {
 	exec, err := s.db.
 		NewDelete().
-		Model(models.TemplateEntity{}).
+		Model(&models.TemplateEntity{}).
 		Where("id = ?", id).
 		Exec(ctx)
 	if err != nil {
@@ -72,7 +74,7 @@ func (s *templateStore) Delete(ctx context.Context, id uuid.UUID) error {
 		return fmt.Errorf("deleting template: couldn't get the number of rows affected with id: %s. Error: %w", id, err)
 	}
 	if affected == 0 {
-		return fmt.Errorf("deleting template: couldn't find template with id: %s", id)
+		return sql.ErrNoRows
 	}
 	return nil
 }
