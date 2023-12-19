@@ -8,9 +8,10 @@ import (
 	"io"
 	"projects/emergency-messages/internal/logging"
 	"projects/emergency-messages/internal/models"
+	"strconv"
 )
 
-const numberOfCSVCells = 5
+const numberOfCSVCells = 7
 const semicolon = ';'
 
 type UserService struct {
@@ -105,21 +106,26 @@ func (s *UserService) getUsersFromCSV(csvData io.Reader) ([]*models.UserCreate, 
 		// v[0] is firstName
 		// v[1] is secondName
 		// v[2] is MobilePhone
-		// v[3] is Email
-		// v[4] is City
-
+		// v[3] is IsMobileActive
+		// v[4] is Email
+		// v[5] is IsEmailActive
+		// v[6] is City
 		firstName := v[0]
 		lastName := v[1]
 		if firstName == "" || lastName == "" {
 			continue
 		}
 
+		contacts, err := getContacts(v)
+		if err != nil {
+			continue
+		}
+
 		user := &models.UserCreate{
-			FirstName:   firstName,
-			LastName:    lastName,
-			MobilePhone: v[2],
-			Email:       v[3],
-			City:        v[4],
+			FirstName: firstName,
+			LastName:  lastName,
+			Contacts:  contacts,
+			City:      v[4],
 		}
 
 		users = append(users, user)
@@ -128,15 +134,47 @@ func (s *UserService) getUsersFromCSV(csvData io.Reader) ([]*models.UserCreate, 
 	return users, nil
 }
 
+func getContacts(v []string) ([]models.Contact, error) {
+	// v[2] is MobilePhone
+	// v[3] is IsMobileActive
+	var contacts []models.Contact
+	if mobilePhone := v[2]; mobilePhone != "" {
+		isMobileActive, err := strconv.ParseBool(v[3])
+		if err != nil {
+			return nil, err
+		}
+		contact := models.Contact{
+			Value:    mobilePhone,
+			Type:     models.ContactTypeSMS,
+			IsActive: isMobileActive,
+		}
+		contacts = append(contacts, contact)
+	}
+	// v[4] is Email
+	// v[5] is IsEmailActive
+	if email := v[4]; email != "" {
+		isEmailActive, err := strconv.ParseBool(v[5])
+		if err != nil {
+			return nil, err
+		}
+		contact := models.Contact{
+			Value:    email,
+			Type:     models.ContactTypeEmail,
+			IsActive: isEmailActive,
+		}
+		contacts = append(contacts, contact)
+	}
+	return contacts, nil
+}
+
 func (s *UserService) transformStoreModelsByCityToUsers(usersStore []models.UserEntity) ([]models.User, error) {
 	users := make([]models.User, len(usersStore))
 	for _, u := range usersStore {
 		user := models.User{
-			FirstName:   u.FirstName,
-			LastName:    u.LastName,
-			MobilePhone: u.MobilePhone,
-			Email:       u.Email,
-			City:        u.City,
+			FirstName: u.FirstName,
+			LastName:  u.LastName,
+			Contacts:  u.Contacts,
+			City:      u.City,
 		}
 		users = append(users, user)
 	}
@@ -145,21 +183,19 @@ func (s *UserService) transformStoreModelsByCityToUsers(usersStore []models.User
 
 func (s *UserService) transformUserCreateToStoreModel(u *models.UserCreate) (*models.UserEntity, error) {
 	return &models.UserEntity{
-		FirstName:   u.FirstName,
-		LastName:    u.LastName,
-		MobilePhone: u.MobilePhone,
-		Email:       u.Email,
-		City:        u.City,
+		FirstName: u.FirstName,
+		LastName:  u.LastName,
+		Contacts:  u.Contacts,
+		City:      u.City,
 	}, nil
 }
 
 func (s *UserService) transformStoreModelToUser(u *models.UserEntity) (*models.UserCreate, error) {
 	return &models.UserCreate{
-		ID:          u.ID,
-		FirstName:   u.FirstName,
-		LastName:    u.LastName,
-		MobilePhone: u.MobilePhone,
-		Email:       u.Email,
-		City:        u.City,
+		ID:        u.ID,
+		FirstName: u.FirstName,
+		LastName:  u.LastName,
+		Contacts:  u.Contacts,
+		City:      u.City,
 	}, nil
 }

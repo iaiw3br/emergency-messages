@@ -8,24 +8,24 @@ import (
 	"github.com/mailgun/mailgun-go"
 )
 
-type Client struct {
+type ClientMailg struct {
 	mg  *mailgun.MailgunImpl
 	log logging.Logger
 }
 
-func NewEmailMailgClient(log logging.Logger) *Client {
+func NewEmailMailgClient(log logging.Logger) *ClientMailg {
 	apiKey := os.Getenv("EMAIL_API_KEY")
 	domain := os.Getenv("EMAIL_DOMAIN")
 
 	mg := mailgun.NewMailgun(domain, apiKey)
 
-	return &Client{
+	return &ClientMailg{
 		mg:  mg,
 		log: log,
 	}
 }
 
-func (c Client) message(newMessage models.Message, email string) *mailgun.Message {
+func (c ClientMailg) message(newMessage models.Message, email string) *mailgun.Message {
 	return c.mg.NewMessage(
 		os.Getenv("MAILGUN_FROM"),
 		newMessage.Subject,
@@ -34,7 +34,7 @@ func (c Client) message(newMessage models.Message, email string) *mailgun.Messag
 	)
 }
 
-func (c Client) Send(newMessage models.Message, email string) error {
+func (c ClientMailg) Send(newMessage models.Message, email string) error {
 	message := c.message(newMessage, email)
 	_, _, err := c.mg.Send(message)
 	if err != nil {
