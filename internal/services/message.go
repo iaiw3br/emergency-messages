@@ -2,13 +2,16 @@ package services
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
-	"github.com/google/uuid"
+	"projects/emergency-messages/internal/errorx"
 	"projects/emergency-messages/internal/logging"
 	"projects/emergency-messages/internal/models"
 	"projects/emergency-messages/internal/providers"
 	"runtime"
 	"sync"
+
+	"github.com/google/uuid"
 )
 
 type MessageService struct {
@@ -44,14 +47,22 @@ func NewMessage(messageStore Message, templateStore TemplateStore, userStore Use
 func (s *MessageService) Send(ctx context.Context, message models.CreateMessage) error {
 	template, err := s.templateStore.GetByID(ctx, message.TemplateID)
 	if err != nil {
-		s.log.Error(err)
-		return err
+		if err == sql.ErrNoRows {
+			s.log.Errorf("sending message: couldn't find template by id: %s", message.TemplateID)
+			return errorx.ErrNotFound
+		}
+		s.log.Errorf("sending message: internal error in template GetByID(): %v", err)
+		return errorx.ErrInternal
 	}
 
 	usersStore, err := s.userStore.FindByCity(ctx, message.City)
 	if err != nil {
-		s.log.Error(err)
-		return err
+		if err == sql.ErrNoRows {
+			s.log.Errorf("sending message: couldn't find user by city: %s", message.City)
+			return errorx.ErrNotFound
+		}
+		s.log.Errorf("sending message: internal error in user FindByCity(): %v", err)
+		return errorx.ErrInternal
 	}
 
 	text := fmt.Sprintf(template.Text, message.City, message.Strength)
@@ -87,21 +98,21 @@ func (s *MessageService) send(ctx context.Context, usersCh <-chan *models.User, 
 
 		storeModel, err := s.transformMessageToStoreModel(newMessage)
 		if err != nil {
-			s.log.Error(err)
+			s.log.Errorf("sending message: transforming message to store model: %v", err)
 			continue
 		}
 		if err = s.messageStore.Create(ctx, storeModel); err != nil {
-			s.log.Error(err)
+			s.log.Errorf("sending message: createing message: %v. Error: %v", storeModel, err)
 			continue
 		}
 
 		if err = s.sender.Send(newMessage, user.Email); err != nil {
-			s.log.Error(err)
+			s.log.Errorf("sending message: sending %v. Error: %v", newMessage, err)
 			continue
 		}
 
 		if err = s.messageStore.UpdateStatus(ctx, storeModel.ID, models.Delivered); err != nil {
-			s.log.Error(err)
+			s.log.Errorf("sending message: updating to new status %s. Error: %v", models.Delivered, err)
 			continue
 		}
 	}

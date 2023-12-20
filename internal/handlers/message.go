@@ -44,9 +44,13 @@ func (m MessageController) Send(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+
 	ctx := context.Background()
-	if err := m.messageService.Send(ctx, message); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+	err = m.messageService.Send(ctx, message)
+	if httpCode := assertError(err); httpCode != 0 {
+		m.log.Error("Message.Send() error:", err)
+		http.Error(w, http.StatusText(httpCode), httpCode)
 		return
 	}
+	w.WriteHeader(http.StatusOK)
 }

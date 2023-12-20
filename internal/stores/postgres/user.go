@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"projects/emergency-messages/internal/models"
 	"projects/emergency-messages/internal/services"
@@ -50,7 +51,7 @@ func (s *userStore) FindByCity(ctx context.Context, city string) ([]models.UserE
 	}
 
 	if len(entities) == 0 {
-		return nil, fmt.Errorf("finding users by city: couldn't find users by city: %s", city)
+		return nil, sql.ErrNoRows
 	}
 
 	return entities, nil

@@ -2,7 +2,9 @@ package postgres
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
+
 	"github.com/google/uuid"
 
 	"projects/emergency-messages/internal/models"
@@ -53,7 +55,7 @@ func (s *messageStore) UpdateStatus(ctx context.Context, id uuid.UUID, status mo
 		return fmt.Errorf("updating message: couldn't get the number of rows affected with id: %s. Error: %w", id, err)
 	}
 	if affected == 0 {
-		return fmt.Errorf("updating message: couldn't find message with id: %s", id)
+		return sql.ErrNoRows
 	}
 	return nil
 }
