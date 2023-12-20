@@ -19,7 +19,7 @@ type MessageService struct {
 	templateStore TemplateStore
 	userStore     User
 	log           logging.Logger
-	sender        providers.Client
+	sender        *providers.SendManager
 }
 
 type Message interface {
@@ -27,7 +27,7 @@ type Message interface {
 	UpdateStatus(ctx context.Context, id uuid.UUID, status models.MessageStatus) error
 }
 
-func NewMessage(messageStore Message, templateStore TemplateStore, userStore User, sender providers.Client, log logging.Logger) *MessageService {
+func NewMessage(messageStore Message, templateStore TemplateStore, userStore User, sender *providers.SendManager, log logging.Logger) *MessageService {
 	return &MessageService{
 		messageStore:  messageStore,
 		templateStore: templateStore,
@@ -77,7 +77,7 @@ func (s *MessageService) Send(ctx context.Context, message models.CreateMessage)
 		s.log.Error(err)
 		return err
 	}
-  
+
 	go sendUsersToUsersChannel(users, usersCh)
 	wg.Wait()
 
