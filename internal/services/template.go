@@ -2,9 +2,11 @@ package services
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"github.com/google/uuid"
+	"projects/emergency-messages/internal/errorx"
 	"projects/emergency-messages/internal/logging"
 	"projects/emergency-messages/internal/models"
 )
@@ -30,46 +32,66 @@ func NewTemplate(templateStore TemplateStore, log logging.Logger) TemplateServic
 
 func (s *TemplateService) Create(ctx context.Context, template *models.TemplateCreate) error {
 	if err := template.Validate(); err != nil {
-		s.log.Error(err)
-		return err
+		s.log.Errorf("creating template: validating data %v. Error: %v", template, err)
+		return errorx.ErrValidation
 	}
 
 	storeModel, err := s.transformTemplateCreateToStoreModel(template)
 	if err != nil {
-		s.log.Error(err)
-		return err
+		s.log.Errorf("creating template: transforming data %v. Error: %v", template, err)
+		return errorx.ErrValidation
 	}
 
 	if err = s.templateStore.Create(ctx, storeModel); err != nil {
-		s.log.Error(err)
-		return err
+		s.log.Errorf("creating template: id %s. Error: %v", storeModel.ID, err)
+		return errorx.ErrInternal
 	}
 
 	return nil
 }
 
 func (s *TemplateService) Delete(ctx context.Context, id string) error {
-	if id == "" {
-		return errors.New("deleting template: id is empty")
-	}
 	uuidValue, err := uuid.Parse(id)
 	if err != nil {
-		return fmt.Errorf("deleting template: couldn't parse id: %s to UUID. Error: %w", id, err)
+		s.log.Errorf("deleting template: invalid format uuid: %s. Error: %v", id, err)
+		return errorx.ErrValidation
 	}
-	return s.templateStore.Delete(ctx, uuidValue)
+
+	if err = s.templateStore.Delete(ctx, uuidValue); err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			s.log.Errorf("deleting template: couldn't find template with id: %s", id)
+			return errorx.ErrNotFound
+		default:
+			s.log.Errorf("deleting template: error in the server: %v", err)
+			return errorx.ErrInternal
+		}
+	}
+	return nil
 }
 
 func (s *TemplateService) Update(ctx context.Context, template *models.TemplateUpdate) error {
 	if err := template.Validate(); err != nil {
-		s.log.Error(err)
-		return err
+		s.log.Errorf("updating template: validating data %v. Error: %v", template, err)
+		return errorx.ErrValidation
 	}
 	storeModel, err := s.transformTemplateUpdateToStoreModel(template)
 	if err != nil {
-		s.log.Error(err)
-		return err
+		s.log.Errorf("updating template: transforming data %v. Error: %v", template, err)
+		return errorx.ErrValidation
 	}
-	return s.templateStore.Update(ctx, storeModel)
+
+	if err = s.templateStore.Update(ctx, storeModel); err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			s.log.Errorf("updating template: couldn't find template with id: %s", storeModel.ID)
+			return errorx.ErrNotFound
+		default:
+			s.log.Errorf("updating template: error in the server: %v", err)
+			return errorx.ErrInternal
+		}
+	}
+	return nil
 }
 
 func (s *TemplateService) transformTemplateCreateToStoreModel(t *models.TemplateCreate) (*models.TemplateEntity, error) {

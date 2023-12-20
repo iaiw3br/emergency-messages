@@ -2,11 +2,13 @@ package postgres
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
-	"github.com/google/uuid"
-	"github.com/uptrace/bun"
 	"projects/emergency-messages/internal/models"
 	"projects/emergency-messages/internal/services"
+
+	"github.com/google/uuid"
+	"github.com/uptrace/bun"
 )
 
 type templateStore struct {
@@ -50,7 +52,7 @@ func (s *templateStore) Update(ctx context.Context, t *models.TemplateEntity) er
 		return fmt.Errorf("updating template: couldn't get the number of rows affected with id: %s. Error: %w", t.ID, err)
 	}
 	if affected == 0 {
-		return fmt.Errorf("updating template: couldn't find template with id: %s", t.ID)
+		return sql.ErrNoRows
 	}
 	return nil
 }
@@ -61,7 +63,7 @@ func (s *templateStore) Update(ctx context.Context, t *models.TemplateEntity) er
 func (s *templateStore) Delete(ctx context.Context, id uuid.UUID) error {
 	exec, err := s.db.
 		NewDelete().
-		Model(models.TemplateEntity{}).
+		Model(&models.TemplateEntity{}).
 		Where("id = ?", id).
 		Exec(ctx)
 	if err != nil {
@@ -72,7 +74,7 @@ func (s *templateStore) Delete(ctx context.Context, id uuid.UUID) error {
 		return fmt.Errorf("deleting template: couldn't get the number of rows affected with id: %s. Error: %w", id, err)
 	}
 	if affected == 0 {
-		return fmt.Errorf("deleting template: couldn't find template with id: %s", id)
+		return sql.ErrNoRows
 	}
 	return nil
 }
@@ -81,7 +83,7 @@ func (s *templateStore) Delete(ctx context.Context, id uuid.UUID) error {
 // It takes in a context and the ID of the template.
 // It returns the template and an error if the retrieval operation fails.
 func (s *templateStore) GetByID(ctx context.Context, id uuid.UUID) (*models.TemplateEntity, error) {
-	entity := &models.TemplateEntity{ID: id}
+	entity := &models.TemplateEntity{}
 	err := s.db.
 		NewSelect().
 		Model(entity).
@@ -89,6 +91,10 @@ func (s *templateStore) GetByID(ctx context.Context, id uuid.UUID) (*models.Temp
 		Scan(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("getting by id template: couldn't get template with id: %s. Error: %w", id, err)
+	}
+
+	if entity.ID == uuid.Nil {
+		return nil, sql.ErrNoRows
 	}
 
 	template := &models.TemplateEntity{

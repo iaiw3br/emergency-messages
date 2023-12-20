@@ -34,8 +34,9 @@ func (u UserController) GetByCity(w http.ResponseWriter, r *http.Request) {
 	city := r.URL.Query().Get("city")
 	ctx := context.Background()
 	users, err := u.userService.GetByCity(ctx, city)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+	if httpCode := assertError(err); httpCode != 0 {
+		u.log.Error("User.GetByCity() error:", err)
+		http.Error(w, http.StatusText(httpCode), httpCode)
 		return
 	}
 
@@ -59,8 +60,9 @@ func (u UserController) Upload(w http.ResponseWriter, r *http.Request) {
 	defer file.Close()
 
 	usersCreated, err := u.userService.Upload(file)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+	if httpCode := assertError(err); httpCode != 0 {
+		u.log.Error("User.Upload() error:", err)
+		http.Error(w, http.StatusText(httpCode), httpCode)
 		return
 	}
 
