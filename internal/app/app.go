@@ -13,7 +13,10 @@ import (
 	"projects/emergency-messages/internal/handlers"
 	"projects/emergency-messages/internal/logging"
 	mdlware "projects/emergency-messages/internal/middlewares"
+	"projects/emergency-messages/internal/models"
 	"projects/emergency-messages/internal/providers"
+	"projects/emergency-messages/internal/providers/email/mail_gun"
+	"projects/emergency-messages/internal/providers/sms/twil"
 	"projects/emergency-messages/internal/services"
 	"projects/emergency-messages/internal/stores/postgres"
 	"syscall"
@@ -115,10 +118,22 @@ func registerEntities(db *bun.DB, l logging.Logger, r *chi.Mux) {
 	templateHandler := handlers.NewTemplate(templateService, l)
 	templateHandler.Register(r)
 
-	sender := providers.NewClient(l)
+	sender := getProviders(l)
 
 	messageStore := postgres.NewMessage(db)
 	messageService := services.NewMessage(messageStore, templateStore, userStore, sender, l)
 	messageHandler := handlers.NewMessage(messageService, l)
 	messageHandler.Register(r)
+}
+
+func getProviders(l logging.Logger) *providers.SendManager {
+	sender := providers.New()
+
+	mailg := mail_gun.NewEmailMailgClient(l)
+	sender.AddProvider(mailg, models.ContactTypeEmail)
+
+	twilSMS := twil.NewMobileTwilClient(l)
+	sender.AddProvider(twilSMS, models.ContactTypeSMS)
+
+	return sender
 }

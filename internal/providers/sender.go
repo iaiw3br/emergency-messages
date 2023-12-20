@@ -2,34 +2,32 @@ package providers
 
 import (
 	"fmt"
-	"projects/emergency-messages/internal/logging"
 	"projects/emergency-messages/internal/models"
-	"projects/emergency-messages/internal/providers/email/mail_gun"
-	"projects/emergency-messages/internal/providers/sms/twil"
 )
 
-type Client struct {
-	mailGun *mail_gun.ClientMailg
-	smsTwil *twil.ClientTwilSMS
+type Sender interface {
+	Send(message models.Message, where string) error
 }
 
-func NewClient(log logging.Logger) Client {
-	mailg := mail_gun.NewEmailMailgClient(log)
-	smsTwil := twil.NewMobileTwilClient(log)
+type SendManager struct {
+	providers map[models.ContactType]Sender
+}
 
-	return Client{
-		mailGun: mailg,
-		smsTwil: smsTwil,
+func New() *SendManager {
+	return &SendManager{
+		providers: make(map[models.ContactType]Sender),
 	}
 }
 
-func (c *Client) Send(message models.Message, contact models.Contact) error {
-	switch contact.Type {
-	case models.ContactTypeEmail:
-		return c.mailGun.Send(message, contact.Value)
-	case models.ContactTypeSMS:
-		return c.smsTwil.Send(message, contact.Value)
-	default:
-		return fmt.Errorf("bad contact type: %s", contact.Type)
+func (sm *SendManager) AddProvider(provider Sender, cType models.ContactType) {
+	sm.providers[cType] = provider
+}
+
+func (sm *SendManager) Send(message models.Message, contact models.Contact) error {
+	provider := sm.providers[contact.Type]
+	if provider == nil {
+		return fmt.Errorf("couldn't find provider by type: %s", contact.Type)
 	}
+
+	return provider.Send(message, contact.Value)
 }
