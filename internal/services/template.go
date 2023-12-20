@@ -32,29 +32,25 @@ func NewTemplate(templateStore TemplateStore, log logging.Logger) TemplateServic
 
 func (s *TemplateService) Create(ctx context.Context, template *models.TemplateCreate) error {
 	if err := template.Validate(); err != nil {
-		s.log.Error(err)
-		return err
+		s.log.Errorf("creating template: validating data %v. Error: %v", template, err)
+		return errorx.ErrValidation
 	}
 
 	storeModel, err := s.transformTemplateCreateToStoreModel(template)
 	if err != nil {
-		s.log.Error(err)
-		return err
+		s.log.Errorf("creating template: transforming data %v. Error: %v", template, err)
+		return errorx.ErrValidation
 	}
 
 	if err = s.templateStore.Create(ctx, storeModel); err != nil {
-		s.log.Error(err)
-		return err
+		s.log.Errorf("creating template: id %s. Error: %v", storeModel.ID, err)
+		return errorx.ErrInternal
 	}
 
 	return nil
 }
 
 func (s *TemplateService) Delete(ctx context.Context, id string) error {
-	if id == "" {
-		s.log.Error("deleting template: uuid is empty")
-		return errorx.ErrValidation
-	}
 	uuidValue, err := uuid.Parse(id)
 	if err != nil {
 		s.log.Errorf("deleting template: invalid format uuid: %s. Error: %v", id, err)
@@ -76,15 +72,26 @@ func (s *TemplateService) Delete(ctx context.Context, id string) error {
 
 func (s *TemplateService) Update(ctx context.Context, template *models.TemplateUpdate) error {
 	if err := template.Validate(); err != nil {
-		s.log.Error(err)
-		return err
+		s.log.Errorf("updating template: validating data %v. Error: %v", template, err)
+		return errorx.ErrValidation
 	}
 	storeModel, err := s.transformTemplateUpdateToStoreModel(template)
 	if err != nil {
-		s.log.Error(err)
-		return err
+		s.log.Errorf("updating template: transforming data %v. Error: %v", template, err)
+		return errorx.ErrValidation
 	}
-	return s.templateStore.Update(ctx, storeModel)
+
+	if err = s.templateStore.Update(ctx, storeModel); err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			s.log.Errorf("updating template: couldn't find template with id: %s", storeModel.ID)
+			return errorx.ErrNotFound
+		default:
+			s.log.Errorf("updating template: error in the server: %v", err)
+			return errorx.ErrInternal
+		}
+	}
+	return nil
 }
 
 func (s *TemplateService) transformTemplateCreateToStoreModel(t *models.TemplateCreate) (*models.TemplateEntity, error) {

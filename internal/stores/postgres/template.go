@@ -52,7 +52,7 @@ func (s *templateStore) Update(ctx context.Context, t *models.TemplateEntity) er
 		return fmt.Errorf("updating template: couldn't get the number of rows affected with id: %s. Error: %w", t.ID, err)
 	}
 	if affected == 0 {
-		return fmt.Errorf("updating template: couldn't find template with id: %s", t.ID)
+		return sql.ErrNoRows
 	}
 	return nil
 }
@@ -83,7 +83,7 @@ func (s *templateStore) Delete(ctx context.Context, id uuid.UUID) error {
 // It takes in a context and the ID of the template.
 // It returns the template and an error if the retrieval operation fails.
 func (s *templateStore) GetByID(ctx context.Context, id uuid.UUID) (*models.TemplateEntity, error) {
-	entity := &models.TemplateEntity{ID: id}
+	entity := &models.TemplateEntity{}
 	err := s.db.
 		NewSelect().
 		Model(entity).
@@ -91,6 +91,10 @@ func (s *templateStore) GetByID(ctx context.Context, id uuid.UUID) (*models.Temp
 		Scan(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("getting by id template: couldn't get template with id: %s. Error: %w", id, err)
+	}
+
+	if entity.ID == uuid.Nil {
+		return nil, sql.ErrNoRows
 	}
 
 	template := &models.TemplateEntity{

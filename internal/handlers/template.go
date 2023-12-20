@@ -78,9 +78,10 @@ func (t Template) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ctx := context.Background()
-	if err = t.templateService.Create(ctx, newTemplate); err != nil {
-		t.log.Error("cannot create template")
-		w.WriteHeader(http.StatusBadRequest)
+	err = t.templateService.Create(ctx, newTemplate)
+	if httpCode := assertError(err); httpCode != 0 {
+		t.log.Error("Template.Create() error:", err)
+		http.Error(w, http.StatusText(httpCode), httpCode)
 		return
 	}
 
@@ -109,9 +110,10 @@ func (t Template) Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ctx := context.Background()
-	if err := t.templateService.Update(ctx, u); err != nil {
-		t.log.Error("cannot create template")
-		w.WriteHeader(http.StatusBadRequest)
+	err = t.templateService.Update(ctx, u)
+	if httpCode := assertError(err); httpCode != 0 {
+		t.log.Error("Template.Update() error:", err)
+		http.Error(w, http.StatusText(httpCode), httpCode)
 		return
 	}
 
@@ -124,7 +126,7 @@ func (t Template) Delete(w http.ResponseWriter, r *http.Request) {
 
 	err := t.templateService.Delete(ctx, id)
 	if httpCode := assertError(err); httpCode != 0 {
-		t.log.Error("template services delete return error:", err)
+		t.log.Error("Template.Delete() error:", err)
 		http.Error(w, http.StatusText(httpCode), httpCode)
 		return
 	}
