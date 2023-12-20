@@ -43,7 +43,7 @@ func (s *messageStore) Create(ctx context.Context, m *models.MessageEntity) erro
 func (s *messageStore) UpdateStatus(ctx context.Context, id uuid.UUID, status models.MessageStatus) error {
 	exec, err := s.db.
 		NewUpdate().
-		Model(&models.TemplateEntity{}).
+		Model(&models.MessageEntity{}).
 		Set("status = ?", string(status)).
 		Where("id = ?", id).
 		Exec(ctx)
