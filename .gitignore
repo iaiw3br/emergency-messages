@@ -1,4 +1,7 @@
 .idea
 .vscode
 
+# files for testing user downloads
+files
+
 .env
