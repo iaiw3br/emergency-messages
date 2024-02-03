@@ -2,6 +2,8 @@ package services
 
 import (
 	"projects/emergency-messages/internal/logging"
+	"projects/emergency-messages/internal/models"
+	"projects/emergency-messages/internal/providers"
 	"projects/emergency-messages/internal/providers/email/mail_gun"
 	mock_service "projects/emergency-messages/internal/services/mocks"
 	"testing"
@@ -19,9 +21,11 @@ func TestNewMessage(t *testing.T) {
 	userStore := mock_service.NewMockUser(controller)
 
 	log := logging.New()
-	email := mail_gun.New(log)
+	client := providers.New()
+	mail := mail_gun.NewEmailMailgClient(log)
+	client.AddProvider(mail, models.ContactTypeEmail)
 
-	res := NewMessage(messageStore, templateStore, userStore, email, log)
+	res := NewMessage(messageStore, templateStore, userStore, client, log)
 	assert.NotNil(t, res)
 	assert.Equal(t, messageStore, res.messageStore)
 	assert.Equal(t, templateStore, res.templateStore)

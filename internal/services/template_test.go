@@ -19,7 +19,7 @@ func TestTemplate_Create(t *testing.T) {
 		controller := gomock.NewController(t)
 		defer controller.Finish()
 
-		store := mock_service.NewMockTemplateStore(controller)
+		store := mock_services.NewMockTemplateStore(controller)
 		template := &models.TemplateCreate{
 			Subject: "1",
 			Text:    "2",
@@ -44,7 +44,7 @@ func TestTemplate_Create(t *testing.T) {
 		controller := gomock.NewController(t)
 		defer controller.Finish()
 
-		store := mock_service.NewMockTemplateStore(controller)
+		store := mock_services.NewMockTemplateStore(controller)
 		template := &models.TemplateCreate{
 			Text: "2",
 		}
@@ -59,7 +59,7 @@ func TestTemplate_Create(t *testing.T) {
 		controller := gomock.NewController(t)
 		defer controller.Finish()
 
-		store := mock_service.NewMockTemplateStore(controller)
+		store := mock_services.NewMockTemplateStore(controller)
 		template := &models.TemplateCreate{
 			Subject: "2",
 		}
@@ -74,7 +74,7 @@ func TestTemplate_Create(t *testing.T) {
 		controller := gomock.NewController(t)
 		defer controller.Finish()
 
-		store := mock_service.NewMockTemplateStore(controller)
+		store := mock_services.NewMockTemplateStore(controller)
 		template := &models.TemplateCreate{
 			Text:    "2",
 			Subject: "2",
@@ -103,7 +103,7 @@ func TestNewTemplate(t *testing.T) {
 	defer controller.Finish()
 
 	log := logging.New()
-	store := mock_service.NewMockTemplateStore(controller)
+	store := mock_services.NewMockTemplateStore(controller)
 	res := NewTemplate(store, log)
 	assert.NotNil(t, res)
 	assert.Equal(t, store, res.templateStore)
@@ -116,7 +116,7 @@ func TestTemplate_Delete(t *testing.T) {
 		defer controller.Finish()
 
 		ctx := context.Background()
-		store := mock_service.NewMockTemplateStore(controller)
+		store := mock_services.NewMockTemplateStore(controller)
 
 		uidStr := "9dfc0a1d-7582-40eb-bc50-53a973bd1dbf"
 		uid, err := uuid.Parse(uidStr)
@@ -138,7 +138,7 @@ func TestTemplate_Delete(t *testing.T) {
 		defer controller.Finish()
 
 		ctx := context.Background()
-		store := mock_service.NewMockTemplateStore(controller)
+		store := mock_services.NewMockTemplateStore(controller)
 
 		uidStr := "9dfc0a1d-7582-40eb-bc50-53a973bd1dbf"
 		uid, err := uuid.Parse(uidStr)
@@ -163,7 +163,7 @@ func TestTemplate_Update(t *testing.T) {
 		defer controller.Finish()
 
 		ctx := context.Background()
-		store := mock_service.NewMockTemplateStore(controller)
+		store := mock_services.NewMockTemplateStore(controller)
 
 		uidStr := "9dfc0a1d-7582-40eb-bc50-53a973bd1dbf"
 		uid, err := uuid.Parse(uidStr)
@@ -195,7 +195,7 @@ func TestTemplate_Update(t *testing.T) {
 		defer controller.Finish()
 
 		ctx := context.Background()
-		store := mock_service.NewMockTemplateStore(controller)
+		store := mock_services.NewMockTemplateStore(controller)
 
 		uidStr := "9dfc0a1d-7582-40eb-bc50-53a973bd1dbf"
 		uid, err := uuid.Parse(uidStr)
@@ -227,7 +227,7 @@ func TestTemplate_Update(t *testing.T) {
 		defer controller.Finish()
 
 		ctx := context.Background()
-		store := mock_service.NewMockTemplateStore(controller)
+		store := mock_services.NewMockTemplateStore(controller)
 		updateTemplate := &models.TemplateUpdate{
 			Subject: "1",
 			Text:    "2",

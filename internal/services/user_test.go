@@ -19,17 +19,26 @@ func TestUserService_GetByCity(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		userStore := mock_service.NewMockUser(ctrl)
+		userStore := mock_services.NewMockUser(ctrl)
 		ctx := context.Background()
 		city := "Moscow"
 
 		wantReturn := []models.User{
 			{
-				FirstName:   "Albert",
-				LastName:    "Guss",
-				MobilePhone: "+8748327432",
-				Email:       "al@gmail.com",
-				City:        "Vancouver",
+				FirstName: "Albert",
+				LastName:  "Guss",
+				Contacts: []models.Contact{
+					{
+						Value: "+8748327432",
+						Type:  models.ContactTypeSMS,
+					},
+					{
+						Value:    "al@gmail.com",
+						Type:     models.ContactTypeEmail,
+						IsActive: true,
+					},
+				},
+				City: "Vancouver",
 			},
 		}
 		userStore.
@@ -47,7 +56,7 @@ func TestUserService_GetByCity(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		userStore := mock_service.NewMockUser(ctrl)
+		userStore := mock_services.NewMockUser(ctrl)
 		ctx := context.Background()
 		city := ""
 
@@ -61,7 +70,7 @@ func TestUserService_GetByCity(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		userStore := mock_service.NewMockUser(ctrl)
+		userStore := mock_services.NewMockUser(ctrl)
 		ctx := context.Background()
 		city := "Sao Paulo"
 
@@ -84,14 +93,23 @@ func TestUserService_Upload(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		userStore := mock_service.NewMockUser(ctrl)
+		userStore := mock_services.NewMockUser(ctrl)
 		ctx := context.Background()
 		userCreate := &models.UserCreate{
-			FirstName:   "Albert",
-			LastName:    "Guss",
-			MobilePhone: "+8748327432",
-			Email:       "al@gmail.com",
-			City:        "Paris",
+			FirstName: "Albert",
+			LastName:  "Guss",
+			Contacts: []models.Contact{
+				{
+					Value: "+8748327432",
+					Type:  models.ContactTypeSMS,
+				},
+				{
+					Value:    "al@gmail.com",
+					Type:     models.ContactTypeEmail,
+					IsActive: true,
+				},
+			},
+			City: "Paris",
 		}
 		userStore.
 			EXPECT().
@@ -111,14 +129,23 @@ func TestUserService_Upload(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		userStore := mock_service.NewMockUser(ctrl)
+		userStore := mock_services.NewMockUser(ctrl)
 		ctx := context.Background()
 		userCreate := &models.UserCreate{
-			FirstName:   "Albert",
-			LastName:    "Guss",
-			MobilePhone: "+8748327432",
-			Email:       "al@gmail.com",
-			City:        "Paris",
+			FirstName: "Albert",
+			LastName:  "Guss",
+			Contacts: []models.Contact{
+				{
+					Value: "+8748327432",
+					Type:  models.ContactTypeSMS,
+				},
+				{
+					Value:    "al@gmail.com",
+					Type:     models.ContactTypeEmail,
+					IsActive: true,
+				},
+			},
+			City: "Paris",
 		}
 		userStore.
 			EXPECT().
@@ -138,14 +165,23 @@ func TestUserService_Upload(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		userStore := mock_service.NewMockUser(ctrl)
+		userStore := mock_services.NewMockUser(ctrl)
 		ctx := context.Background()
 		userCreate := &models.UserCreate{
-			FirstName:   "Albert",
-			LastName:    "Guss",
-			MobilePhone: "+8748327432",
-			Email:       "al@gmail.com",
-			City:        "Paris",
+			FirstName: "Albert",
+			LastName:  "Guss",
+			Contacts: []models.Contact{
+				{
+					Value: "+8748327432",
+					Type:  models.ContactTypeSMS,
+				},
+				{
+					Value:    "al@gmail.com",
+					Type:     models.ContactTypeEmail,
+					IsActive: true,
+				},
+			},
+			City: "Paris",
 		}
 		userStore.
 			EXPECT().
@@ -165,7 +201,7 @@ func TestUserService_Upload(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		userStore := mock_service.NewMockUser(ctrl)
+		userStore := mock_services.NewMockUser(ctrl)
 
 		data := "FirstName;SecondName;MobilePhone;Email\nAlbert;Guss;+8748327432;al@gmail.com\n"
 		buf := bytes.NewBuffer([]byte(data))
@@ -180,14 +216,23 @@ func TestUserService_Upload(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		userStore := mock_service.NewMockUser(ctrl)
+		userStore := mock_services.NewMockUser(ctrl)
 		ctx := context.Background()
 		userCreate := &models.UserCreate{
-			FirstName:   "Albert",
-			LastName:    "Guss",
-			MobilePhone: "+8748327432",
-			Email:       "al@gmail.com",
-			City:        "Paris",
+			FirstName: "Albert",
+			LastName:  "Guss",
+			Contacts: []models.Contact{
+				{
+					Value: "+8748327432",
+					Type:  models.ContactTypeSMS,
+				},
+				{
+					Value:    "al@gmail.com",
+					Type:     models.ContactTypeEmail,
+					IsActive: true,
+				},
+			},
+			City: "Paris",
 		}
 		userStore.
 			EXPECT().
