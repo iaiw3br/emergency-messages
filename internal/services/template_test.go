@@ -4,11 +4,10 @@ import (
 	"context"
 	"errors"
 	"github.com/google/uuid"
-	"projects/emergency-messages/internal/services/mocks"
-	"testing"
-
 	"projects/emergency-messages/internal/logging"
 	"projects/emergency-messages/internal/models"
+	"projects/emergency-messages/internal/services/mocks"
+	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
@@ -124,7 +123,7 @@ func TestTemplate_Delete(t *testing.T) {
 
 		store.
 			EXPECT().
-			Delete(ctx, uid).
+			Delete(ctx, uid, gomock.Any()).
 			Return(nil)
 
 		log := logging.New()
@@ -146,7 +145,7 @@ func TestTemplate_Delete(t *testing.T) {
 
 		store.
 			EXPECT().
-			Delete(ctx, uid).
+			Delete(ctx, uid, gomock.Any()).
 			Return(errors.New(""))
 
 		log := logging.New()
