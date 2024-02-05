@@ -76,6 +76,7 @@ func (t Template) Update(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+	id := chi.URLParam(r, "id")
 
 	var template *templateUpdate
 	if err = json.Unmarshal(b, &template); err != nil {
@@ -85,7 +86,7 @@ func (t Template) Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	u := &models.TemplateUpdate{
-		ID:      template.ID,
+		ID:      id,
 		Subject: template.Subject,
 		Text:    template.Text,
 	}

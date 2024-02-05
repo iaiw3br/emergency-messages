@@ -33,10 +33,10 @@ func (r Router) Load() {
 		})
 		router.Route("/templates", func(router chi.Router) {
 			router.Post("/", r.template.Create)
-			router.Patch("/", r.template.Update)
 
 			router.Route("/{id}", func(router chi.Router) {
 				router.Delete("/", r.template.Delete)
+				router.Patch("/", r.template.Update)
 			})
 		})
 		router.Route("/users", func(router chi.Router) {
