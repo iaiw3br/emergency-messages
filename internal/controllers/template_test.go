@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
@@ -349,5 +350,106 @@ func TestTemplate_Update(t *testing.T) {
 		defer resp.Body.Close()
 
 		assert.Equal(t, http.StatusInternalServerError, resp.StatusCode)
+	})
+}
+
+func TestTemplate_Delete(t *testing.T) {
+	t.Run("when data is valid then no error", func(t *testing.T) {
+		r := chi.NewRouter()
+
+		controller := gomock.NewController(t)
+		defer controller.Finish()
+
+		ctx := context.Background()
+		service := mock_controllers.NewMockTemplateService(controller)
+
+		id := "7d603549-b079-4016-b81e-9e4386c1de21"
+
+		service.EXPECT().
+			Delete(ctx, id).
+			Return(nil)
+
+		log := logging.New()
+		tmpl := NewTemplate(service, log)
+
+		r.Delete(fmt.Sprintf("/templates/%s", id), tmpl.Delete)
+
+		req, err := http.NewRequest(http.MethodDelete, fmt.Sprintf("/templates/%s", id), nil)
+		assert.NoError(t, err)
+
+		routeCtx := chi.NewRouteContext()
+		routeCtx.URLParams.Add("id", id)
+		req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, routeCtx))
+
+		rr := httptest.NewRecorder()
+		r.ServeHTTP(rr, req)
+
+		assert.Equal(t, http.StatusOK, rr.Code)
+	})
+
+	t.Run("when get not found then error", func(t *testing.T) {
+		r := chi.NewRouter()
+
+		controller := gomock.NewController(t)
+		defer controller.Finish()
+
+		ctx := context.Background()
+		service := mock_controllers.NewMockTemplateService(controller)
+
+		id := "7d603549-b079-4016-b81e-9e4386c1de21"
+
+		service.EXPECT().
+			Delete(ctx, id).
+			Return(errorx.ErrNotFound)
+
+		log := logging.New()
+		tmpl := NewTemplate(service, log)
+
+		r.Delete(fmt.Sprintf("/templates/%s", id), tmpl.Delete)
+
+		req, err := http.NewRequest(http.MethodDelete, fmt.Sprintf("/templates/%s", id), nil)
+		assert.NoError(t, err)
+
+		routeCtx := chi.NewRouteContext()
+		routeCtx.URLParams.Add("id", id)
+		req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, routeCtx))
+
+		rr := httptest.NewRecorder()
+		r.ServeHTTP(rr, req)
+
+		assert.Equal(t, http.StatusNotFound, rr.Code)
+	})
+
+	t.Run("when get internal error then error", func(t *testing.T) {
+		r := chi.NewRouter()
+
+		controller := gomock.NewController(t)
+		defer controller.Finish()
+
+		ctx := context.Background()
+		service := mock_controllers.NewMockTemplateService(controller)
+
+		id := "7d603549-b079-4016-b81e-9e4386c1de21"
+
+		service.EXPECT().
+			Delete(ctx, id).
+			Return(errorx.ErrInternal)
+
+		log := logging.New()
+		tmpl := NewTemplate(service, log)
+
+		r.Delete(fmt.Sprintf("/templates/%s", id), tmpl.Delete)
+
+		req, err := http.NewRequest(http.MethodDelete, fmt.Sprintf("/templates/%s", id), nil)
+		assert.NoError(t, err)
+
+		routeCtx := chi.NewRouteContext()
+		routeCtx.URLParams.Add("id", id)
+		req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, routeCtx))
+
+		rr := httptest.NewRecorder()
+		r.ServeHTTP(rr, req)
+
+		assert.Equal(t, http.StatusInternalServerError, rr.Code)
 	})
 }
