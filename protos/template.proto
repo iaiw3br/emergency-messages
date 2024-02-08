@@ -5,9 +5,9 @@ package template;
 option go_package = "github.com/iaiw3br/emergency-messages/internal/controllers;api";
 
 service Template {
-  rpc Create(CreateRequest) returns(EmptyResponse);
-  rpc Update(UpdateRequest) returns(EmptyResponse);
-  rpc Delete(DeleteRequest) returns(EmptyResponse);
+  rpc CreateV2(CreateRequest) returns(EmptyResponse);
+  rpc UpdateV2(UpdateRequest) returns(EmptyResponse);
+  rpc DeleteV2(DeleteRequest) returns(EmptyResponse);
 }
 
 message CreateRequest {
@@ -18,11 +18,11 @@ message CreateRequest {
 message EmptyResponse {}
 
 message UpdateRequest {
-  int64 id = 1;
+  string id = 1;
   string subject = 2;
   string text = 3;
 }
 
 message DeleteRequest {
-  int64 id = 1;
+  string id = 1;
 }

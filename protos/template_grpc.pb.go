@@ -22,9 +22,9 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type TemplateClient interface {
-	Create(ctx context.Context, in *CreateRequest, opts ...grpc.CallOption) (*EmptyResponse, error)
-	Update(ctx context.Context, in *UpdateRequest, opts ...grpc.CallOption) (*EmptyResponse, error)
-	Delete(ctx context.Context, in *DeleteRequest, opts ...grpc.CallOption) (*EmptyResponse, error)
+	CreateV2(ctx context.Context, in *CreateRequest, opts ...grpc.CallOption) (*EmptyResponse, error)
+	UpdateV2(ctx context.Context, in *UpdateRequest, opts ...grpc.CallOption) (*EmptyResponse, error)
+	DeleteV2(ctx context.Context, in *DeleteRequest, opts ...grpc.CallOption) (*EmptyResponse, error)
 }
 
 type templateClient struct {
@@ -35,27 +35,27 @@ func NewTemplateClient(cc grpc.ClientConnInterface) TemplateClient {
 	return &templateClient{cc}
 }
 
-func (c *templateClient) Create(ctx context.Context, in *CreateRequest, opts ...grpc.CallOption) (*EmptyResponse, error) {
+func (c *templateClient) CreateV2(ctx context.Context, in *CreateRequest, opts ...grpc.CallOption) (*EmptyResponse, error) {
 	out := new(EmptyResponse)
-	err := c.cc.Invoke(ctx, "/template.Template/Create", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/template.Template/CreateV2", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *templateClient) Update(ctx context.Context, in *UpdateRequest, opts ...grpc.CallOption) (*EmptyResponse, error) {
+func (c *templateClient) UpdateV2(ctx context.Context, in *UpdateRequest, opts ...grpc.CallOption) (*EmptyResponse, error) {
 	out := new(EmptyResponse)
-	err := c.cc.Invoke(ctx, "/template.Template/Update", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/template.Template/UpdateV2", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *templateClient) Delete(ctx context.Context, in *DeleteRequest, opts ...grpc.CallOption) (*EmptyResponse, error) {
+func (c *templateClient) DeleteV2(ctx context.Context, in *DeleteRequest, opts ...grpc.CallOption) (*EmptyResponse, error) {
 	out := new(EmptyResponse)
-	err := c.cc.Invoke(ctx, "/template.Template/Delete", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/template.Template/DeleteV2", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -66,9 +66,9 @@ func (c *templateClient) Delete(ctx context.Context, in *DeleteRequest, opts ...
 // All implementations must embed UnimplementedTemplateServer
 // for forward compatibility
 type TemplateServer interface {
-	Create(context.Context, *CreateRequest) (*EmptyResponse, error)
-	Update(context.Context, *UpdateRequest) (*EmptyResponse, error)
-	Delete(context.Context, *DeleteRequest) (*EmptyResponse, error)
+	CreateV2(context.Context, *CreateRequest) (*EmptyResponse, error)
+	UpdateV2(context.Context, *UpdateRequest) (*EmptyResponse, error)
+	DeleteV2(context.Context, *DeleteRequest) (*EmptyResponse, error)
 	mustEmbedUnimplementedTemplateServer()
 }
 
@@ -76,14 +76,14 @@ type TemplateServer interface {
 type UnimplementedTemplateServer struct {
 }
 
-func (UnimplementedTemplateServer) Create(context.Context, *CreateRequest) (*EmptyResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Create not implemented")
+func (UnimplementedTemplateServer) CreateV2(context.Context, *CreateRequest) (*EmptyResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateV2 not implemented")
 }
-func (UnimplementedTemplateServer) Update(context.Context, *UpdateRequest) (*EmptyResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Update not implemented")
+func (UnimplementedTemplateServer) UpdateV2(context.Context, *UpdateRequest) (*EmptyResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateV2 not implemented")
 }
-func (UnimplementedTemplateServer) Delete(context.Context, *DeleteRequest) (*EmptyResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Delete not implemented")
+func (UnimplementedTemplateServer) DeleteV2(context.Context, *DeleteRequest) (*EmptyResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteV2 not implemented")
 }
 func (UnimplementedTemplateServer) mustEmbedUnimplementedTemplateServer() {}
 
@@ -98,56 +98,56 @@ func RegisterTemplateServer(s grpc.ServiceRegistrar, srv TemplateServer) {
 	s.RegisterService(&Template_ServiceDesc, srv)
 }
 
-func _Template_Create_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Template_CreateV2_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CreateRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(TemplateServer).Create(ctx, in)
+		return srv.(TemplateServer).CreateV2(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/template.Template/Create",
+		FullMethod: "/template.Template/CreateV2",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TemplateServer).Create(ctx, req.(*CreateRequest))
+		return srv.(TemplateServer).CreateV2(ctx, req.(*CreateRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Template_Update_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Template_UpdateV2_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(UpdateRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(TemplateServer).Update(ctx, in)
+		return srv.(TemplateServer).UpdateV2(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/template.Template/Update",
+		FullMethod: "/template.Template/UpdateV2",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TemplateServer).Update(ctx, req.(*UpdateRequest))
+		return srv.(TemplateServer).UpdateV2(ctx, req.(*UpdateRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Template_Delete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Template_DeleteV2_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(DeleteRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(TemplateServer).Delete(ctx, in)
+		return srv.(TemplateServer).DeleteV2(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/template.Template/Delete",
+		FullMethod: "/template.Template/DeleteV2",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TemplateServer).Delete(ctx, req.(*DeleteRequest))
+		return srv.(TemplateServer).DeleteV2(ctx, req.(*DeleteRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -160,16 +160,16 @@ var Template_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*TemplateServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "Create",
-			Handler:    _Template_Create_Handler,
+			MethodName: "CreateV2",
+			Handler:    _Template_CreateV2_Handler,
 		},
 		{
-			MethodName: "Update",
-			Handler:    _Template_Update_Handler,
+			MethodName: "UpdateV2",
+			Handler:    _Template_UpdateV2_Handler,
 		},
 		{
-			MethodName: "Delete",
-			Handler:    _Template_Delete_Handler,
+			MethodName: "DeleteV2",
+			Handler:    _Template_DeleteV2_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
