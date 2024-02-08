@@ -2,12 +2,12 @@ syntax = "proto3";
 
 package template;
 
-option go_package = "github.com/iaiw3br/emergency-messages/internal/controllers;api";
+option go_package = "github.com/iaiw3br/emergency-messages/internal/controllers/grpc;api";
 
 service Template {
-  rpc CreateV2(CreateRequest) returns(EmptyResponse);
-  rpc UpdateV2(UpdateRequest) returns(EmptyResponse);
-  rpc DeleteV2(DeleteRequest) returns(EmptyResponse);
+  rpc Create(CreateRequest) returns(EmptyResponse);
+  rpc Update(UpdateRequest) returns(EmptyResponse);
+  rpc Delete(DeleteRequest) returns(EmptyResponse);
 }
 
 message CreateRequest {
