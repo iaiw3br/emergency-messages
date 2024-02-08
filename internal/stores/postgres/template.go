@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"projects/emergency-messages/internal/models"
 	"projects/emergency-messages/internal/services"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/uptrace/bun"
@@ -60,10 +61,11 @@ func (s *templateStore) Update(ctx context.Context, t *models.TemplateEntity) er
 // Delete deletes the struct of a template in the database.
 // It takes in a context and the ID of the template.
 // It returns an error if the delete operation fails.
-func (s *templateStore) Delete(ctx context.Context, id uuid.UUID) error {
+func (s *templateStore) Delete(ctx context.Context, id uuid.UUID, now time.Time) error {
 	exec, err := s.db.
-		NewDelete().
+		NewUpdate().
 		Model(&models.TemplateEntity{}).
+		Set("deleted_at = ?", now).
 		Where("id = ?", id).
 		Exec(ctx)
 	if err != nil {

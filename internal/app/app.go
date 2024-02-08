@@ -4,21 +4,26 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"google.golang.org/grpc"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
+	grpcapp "projects/emergency-messages/internal/app/grpc"
 	"projects/emergency-messages/internal/config"
+	"projects/emergency-messages/internal/controllers"
+	v2 "projects/emergency-messages/internal/controllers/grpc"
 	client "projects/emergency-messages/internal/databases/client/postgres"
-	"projects/emergency-messages/internal/handlers"
 	"projects/emergency-messages/internal/logging"
 	mdlware "projects/emergency-messages/internal/middlewares"
 	"projects/emergency-messages/internal/models"
 	"projects/emergency-messages/internal/providers"
 	"projects/emergency-messages/internal/providers/email/mail_gun"
 	"projects/emergency-messages/internal/providers/sms/twil"
+	"projects/emergency-messages/internal/router"
 	"projects/emergency-messages/internal/services"
 	"projects/emergency-messages/internal/stores/postgres"
+	"strconv"
 	"syscall"
 	"time"
 
@@ -53,13 +58,22 @@ func startServer(ctx context.Context) error {
 			Addr:    listenAddr,
 			Handler: r,
 		}
-		logging = logging.New()
-		url     = os.Getenv("DATABASE_URL")
+		logging  = logging.New()
+		url      = os.Getenv("DATABASE_URL")
+		grpcPort = os.Getenv("GRPC_PORT")
 	)
 
 	db := client.Connect(url)
 
-	registerEntities(db, logging, r)
+	port, err := strconv.Atoi(grpcPort)
+	if err != nil {
+		return fmt.Errorf("cannot trasform string grpc port to integer, %w", err)
+	}
+
+	grpcApp := grpcapp.New(logging, port)
+	go grpcApp.Run()
+
+	registerEntities(db, grpcApp.GRPCServer, logging, r)
 
 	go func() {
 		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
@@ -96,7 +110,7 @@ func startServer(ctx context.Context) error {
 	return nil
 }
 
-func registerEntities(db *bun.DB, l logging.Logger, r *chi.Mux) {
+func registerEntities(db *bun.DB, grpcServer *grpc.Server, l logging.Logger, r *chi.Mux) {
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
@@ -110,20 +124,21 @@ func registerEntities(db *bun.DB, l logging.Logger, r *chi.Mux) {
 
 	userStore := postgres.NewUserStore(db)
 	userService := services.NewUserService(userStore, l)
-	userHandler := handlers.NewUser(userService, l)
-	userHandler.Register(r)
+	userController := controllers.NewUser(userService, l)
 
 	templateStore := postgres.NewTemplate(db)
 	templateService := services.NewTemplate(templateStore, l)
-	templateHandler := handlers.NewTemplate(templateService, l)
-	templateHandler.Register(r)
+	templateController := controllers.NewTemplate(&templateService, l)
+	v2.Register(grpcServer, &templateService, l)
 
 	sender := getProviders(l)
 
 	messageStore := postgres.NewMessage(db)
 	messageService := services.NewMessage(messageStore, templateStore, userStore, sender, l)
-	messageHandler := handlers.NewMessage(messageService, l)
-	messageHandler.Register(r)
+	messageController := controllers.NewMessage(messageService, l)
+
+	routers := router.New(r, messageController, userController, templateController)
+	routers.Load()
 }
 
 func getProviders(l logging.Logger) *providers.SendManager {

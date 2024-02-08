@@ -12,6 +12,7 @@ import (
 	context "context"
 	models "projects/emergency-messages/internal/models"
 	reflect "reflect"
+	time "time"
 
 	uuid "github.com/google/uuid"
 	gomock "go.uber.org/mock/gomock"
@@ -55,17 +56,17 @@ func (mr *MockTemplateStoreMockRecorder) Create(ctx, t any) *gomock.Call {
 }
 
 // Delete mocks base method.
-func (m *MockTemplateStore) Delete(ctx context.Context, id uuid.UUID) error {
+func (m *MockTemplateStore) Delete(ctx context.Context, id uuid.UUID, now time.Time) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Delete", ctx, id)
+	ret := m.ctrl.Call(m, "Delete", ctx, id, now)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Delete indicates an expected call of Delete.
-func (mr *MockTemplateStoreMockRecorder) Delete(ctx, id any) *gomock.Call {
+func (mr *MockTemplateStoreMockRecorder) Delete(ctx, id, now any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockTemplateStore)(nil).Delete), ctx, id)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockTemplateStore)(nil).Delete), ctx, id, now)
 }
 
 // GetByID mocks base method.

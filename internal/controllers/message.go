@@ -1,4 +1,4 @@
-package handlers
+package controllers
 
 import (
 	"context"
@@ -8,29 +8,21 @@ import (
 	"projects/emergency-messages/internal/logging"
 	"projects/emergency-messages/internal/models"
 	"projects/emergency-messages/internal/services"
-
-	"github.com/go-chi/chi/v5"
 )
 
-const messages = "/messages"
-
-type MessageController struct {
+type Message struct {
 	messageService *services.MessageService
 	log            logging.Logger
 }
 
-func NewMessage(messageService *services.MessageService, log logging.Logger) *MessageController {
-	return &MessageController{
+func NewMessage(messageService *services.MessageService, log logging.Logger) *Message {
+	return &Message{
 		messageService: messageService,
 		log:            log,
 	}
 }
 
-func (m MessageController) Register(r *chi.Mux) {
-	r.Post(messages, m.Send)
-}
-
-func (m MessageController) Send(w http.ResponseWriter, r *http.Request) {
+func (m Message) Send(w http.ResponseWriter, r *http.Request) {
 	b, err := io.ReadAll(r.Body)
 	if err != nil {
 		m.log.Error("cannot read body")
@@ -47,9 +39,8 @@ func (m MessageController) Send(w http.ResponseWriter, r *http.Request) {
 
 	ctx := context.Background()
 	err = m.messageService.Send(ctx, message)
-	if httpCode := assertError(err); httpCode != 0 {
+	if assertError(err, w) {
 		m.log.Error("Message.Send() error:", err)
-		http.Error(w, http.StatusText(httpCode), httpCode)
 		return
 	}
 	w.WriteHeader(http.StatusOK)

@@ -26,7 +26,7 @@ func (c *ClientTwilSMS) Send(newMessage models.Message, phone string) error {
 
 	_, err := client.Api.CreateMessage(params)
 	if err != nil {
-		c.log.Errorf("mobile twil couldn't send message: %v, phone: %s. Error: %w", newMessage, phone, err)
+		c.log.Errorf("mobile twil couldn't send message: %v, phone: %s. Error: %v", newMessage, phone, err)
 		return err
 	}
 	return nil

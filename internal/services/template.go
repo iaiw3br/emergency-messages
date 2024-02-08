@@ -9,6 +9,7 @@ import (
 	"projects/emergency-messages/internal/errorx"
 	"projects/emergency-messages/internal/logging"
 	"projects/emergency-messages/internal/models"
+	"time"
 )
 
 type TemplateService struct {
@@ -19,7 +20,7 @@ type TemplateService struct {
 type TemplateStore interface {
 	Create(ctx context.Context, t *models.TemplateEntity) error
 	Update(ctx context.Context, t *models.TemplateEntity) error
-	Delete(ctx context.Context, id uuid.UUID) error
+	Delete(ctx context.Context, id uuid.UUID, now time.Time) error
 	GetByID(ctx context.Context, id uuid.UUID) (*models.TemplateEntity, error)
 }
 
@@ -57,7 +58,9 @@ func (s *TemplateService) Delete(ctx context.Context, id string) error {
 		return errorx.ErrValidation
 	}
 
-	if err = s.templateStore.Delete(ctx, uuidValue); err != nil {
+	now := time.Now()
+
+	if err = s.templateStore.Delete(ctx, uuidValue, now); err != nil {
 		switch {
 		case errors.Is(err, sql.ErrNoRows):
 			s.log.Errorf("deleting template: couldn't find template with id: %s", id)

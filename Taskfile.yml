@@ -1,7 +1,6 @@
 version: '3'
 
-envfiles:
-  - .env
+dotenv: ['.env']
 
 tasks:
   tests:
@@ -23,11 +22,17 @@ tasks:
       - mockgen -source=internal/services/message.go -destination internal/services/mocks/message_mock.go
       - mockgen -source=internal/services/template.go -destination internal/services/mocks/template_mock.go
       - mockgen -source=internal/services/user.go -destination internal/services/mocks/user_mock.go
+      - mockgen -source=internal/controllers/template.go -destination internal/controllers/mocks/template_mock.go
 
-  ## task migrate-create --name my_name
+  protos:
+    cmds:
+      - cd protos && protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative template.proto
+
+
+  ## task migrate-create NAME=some-name
   migrate-create:
     cmds:
-      - migrate create -ext sql -dir internal/databases/migrations {{.name}}
+      - migrate create -ext sql -dir internal/databases/migrations {{.NAME}}
 
   migrate-up:
     cmds:
@@ -35,4 +40,8 @@ tasks:
 
   migrate-fix:
     cmds:
-      - migrate -path ./internal/databases/migrations -database -database ${DATABASE_URL}?sslmode=disable force {{.number}}
+      - migrate -path ./internal/databases/migrations -database -database $DATABASE_URL?sslmode=disable force {{.NUMBER}}
+
+  run:
+    - go run ./cmd/app/main.go
+    - docker-compose up
