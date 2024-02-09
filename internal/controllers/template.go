@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"github.com/go-chi/chi/v5"
 	"io"
+	"log/slog"
 	"net/http"
-	"projects/emergency-messages/internal/logging"
 	"projects/emergency-messages/internal/models"
 )
 
@@ -18,7 +18,7 @@ type TemplateService interface {
 
 type Template struct {
 	templateService TemplateService
-	log             logging.Logger
+	log             *slog.Logger
 }
 
 type templateUpdate struct {
@@ -32,7 +32,7 @@ type templateCreate struct {
 	Text    string `json:"text"`
 }
 
-func NewTemplate(templateService TemplateService, log logging.Logger) *Template {
+func NewTemplate(templateService TemplateService, log *slog.Logger) *Template {
 	return &Template{
 		templateService: templateService,
 		log:             log,
@@ -42,14 +42,14 @@ func NewTemplate(templateService TemplateService, log logging.Logger) *Template 
 func (t Template) Create(w http.ResponseWriter, r *http.Request) {
 	b, err := io.ReadAll(r.Body)
 	if err != nil {
-		t.log.Error("cannot read body")
+		t.log.Error("cannot reading body")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
 	var temp *templateCreate
 	if err = json.Unmarshal(b, &temp); err != nil {
-		t.log.Error("cannot unmarshal body")
+		t.log.Error("cannot unmarshalling body")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -62,7 +62,7 @@ func (t Template) Create(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
 	err = t.templateService.Create(ctx, newTemplate)
 	if assertError(err, w) {
-		t.log.Error("Template.Create() error:", err)
+		t.log.Error("creating template", err)
 		return
 	}
 
@@ -72,7 +72,7 @@ func (t Template) Create(w http.ResponseWriter, r *http.Request) {
 func (t Template) Update(w http.ResponseWriter, r *http.Request) {
 	b, err := io.ReadAll(r.Body)
 	if err != nil {
-		t.log.Error("cannot read body")
+		t.log.Error("cannot reading body")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -80,7 +80,7 @@ func (t Template) Update(w http.ResponseWriter, r *http.Request) {
 
 	var template *templateUpdate
 	if err = json.Unmarshal(b, &template); err != nil {
-		t.log.Error("cannot unmarshal body")
+		t.log.Error("cannot unmarshalling body")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -94,7 +94,7 @@ func (t Template) Update(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
 	err = t.templateService.Update(ctx, u)
 	if assertError(err, w) {
-		t.log.Error("Template.Update() error:", err)
+		t.log.Error("updating template", err)
 		return
 	}
 
@@ -107,7 +107,7 @@ func (t Template) Delete(w http.ResponseWriter, r *http.Request) {
 
 	err := t.templateService.Delete(ctx, id)
 	if assertError(err, w) {
-		t.log.Error("Template.Delete() error:", err)
+		t.log.Error("deleting template", err)
 		return
 	}
 	w.WriteHeader(http.StatusOK)

@@ -8,16 +8,19 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
+	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	mock_controllers "projects/emergency-messages/internal/controllers/mocks"
 	"projects/emergency-messages/internal/errorx"
-	"projects/emergency-messages/internal/logging"
 	"projects/emergency-messages/internal/models"
 	"testing"
 )
 
 func TestTemplate_Create(t *testing.T) {
+	log := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+
 	t.Run("when data is valid then no error", func(t *testing.T) {
 		r := chi.NewRouter()
 
@@ -41,7 +44,6 @@ func TestTemplate_Create(t *testing.T) {
 			Create(ctx, newTemplate).
 			Return(nil)
 
-		log := logging.New()
 		tmpl := NewTemplate(service, log)
 
 		r.Post("/templates", tmpl.Create)
@@ -71,7 +73,6 @@ func TestTemplate_Create(t *testing.T) {
 
 		service := mock_controllers.NewMockTemplateService(controller)
 
-		log := logging.New()
 		tmpl := NewTemplate(service, log)
 
 		r.Post("/templates", tmpl.Create)
@@ -117,7 +118,6 @@ func TestTemplate_Create(t *testing.T) {
 			Create(ctx, newTemplate).
 			Return(errorx.ErrValidation)
 
-		log := logging.New()
 		tmpl := NewTemplate(service, log)
 
 		r.Post("/templates", tmpl.Create)
@@ -162,7 +162,6 @@ func TestTemplate_Create(t *testing.T) {
 			Create(ctx, newTemplate).
 			Return(errorx.ErrInternal)
 
-		log := logging.New()
 		tmpl := NewTemplate(service, log)
 
 		r.Post("/templates", tmpl.Create)
@@ -186,6 +185,8 @@ func TestTemplate_Create(t *testing.T) {
 }
 
 func TestTemplate_Update(t *testing.T) {
+	log := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+
 	t.Run("when data is valid then no error", func(t *testing.T) {
 		r := chi.NewRouter()
 
@@ -209,7 +210,6 @@ func TestTemplate_Update(t *testing.T) {
 			Update(ctx, newTemplate).
 			Return(nil)
 
-		log := logging.New()
 		tmpl := NewTemplate(service, log)
 
 		r.Post("/templates", tmpl.Update)
@@ -239,7 +239,6 @@ func TestTemplate_Update(t *testing.T) {
 
 		service := mock_controllers.NewMockTemplateService(controller)
 
-		log := logging.New()
 		tmpl := NewTemplate(service, log)
 
 		r.Post("/templates", tmpl.Update)
@@ -285,7 +284,6 @@ func TestTemplate_Update(t *testing.T) {
 			Update(ctx, newTemplate).
 			Return(errorx.ErrValidation)
 
-		log := logging.New()
 		tmpl := NewTemplate(service, log)
 
 		r.Post("/templates", tmpl.Update)
@@ -330,7 +328,6 @@ func TestTemplate_Update(t *testing.T) {
 			Update(ctx, newTemplate).
 			Return(errorx.ErrInternal)
 
-		log := logging.New()
 		tmpl := NewTemplate(service, log)
 
 		r.Post("/templates", tmpl.Update)
@@ -354,6 +351,8 @@ func TestTemplate_Update(t *testing.T) {
 }
 
 func TestTemplate_Delete(t *testing.T) {
+	log := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+
 	t.Run("when data is valid then no error", func(t *testing.T) {
 		r := chi.NewRouter()
 
@@ -369,7 +368,6 @@ func TestTemplate_Delete(t *testing.T) {
 			Delete(ctx, id).
 			Return(nil)
 
-		log := logging.New()
 		tmpl := NewTemplate(service, log)
 
 		r.Delete(fmt.Sprintf("/templates/%s", id), tmpl.Delete)
@@ -402,7 +400,6 @@ func TestTemplate_Delete(t *testing.T) {
 			Delete(ctx, id).
 			Return(errorx.ErrNotFound)
 
-		log := logging.New()
 		tmpl := NewTemplate(service, log)
 
 		r.Delete(fmt.Sprintf("/templates/%s", id), tmpl.Delete)
@@ -435,7 +432,6 @@ func TestTemplate_Delete(t *testing.T) {
 			Delete(ctx, id).
 			Return(errorx.ErrInternal)
 
-		log := logging.New()
 		tmpl := NewTemplate(service, log)
 
 		r.Delete(fmt.Sprintf("/templates/%s", id), tmpl.Delete)

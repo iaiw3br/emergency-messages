@@ -4,7 +4,8 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"projects/emergency-messages/internal/logging"
+	"log/slog"
+	"os"
 	"projects/emergency-messages/internal/models"
 	"projects/emergency-messages/internal/services/mocks"
 	"testing"
@@ -14,16 +15,17 @@ import (
 )
 
 func TestUserService_GetByCity(t *testing.T) {
-	t.Skip()
-	t.Run("when have city and services without error then no error", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
+	log := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
 
-		userStore := mock_services.NewMockUser(ctrl)
-		ctx := context.Background()
+	ctx := context.Background()
+	userStore := mock_services.NewMockUser(ctrl)
+	userService := NewUserService(userStore, log)
+
+	t.Run("when have city and services then no error", func(t *testing.T) {
 		city := "Moscow"
-
-		wantReturn := []models.User{
+		wantReturn := []models.UserEntity{
 			{
 				FirstName: "Albert",
 				LastName:  "Guss",
@@ -46,32 +48,18 @@ func TestUserService_GetByCity(t *testing.T) {
 			FindByCity(ctx, city).
 			Return(wantReturn, nil)
 
-		log := logging.New()
-		userService := NewUserService(userStore, log)
 		users, err := userService.GetByCity(ctx, city)
 		assert.NoError(t, err)
 		assert.NotNil(t, users)
 	})
+
 	t.Run("when city is empty then error", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
-
-		userStore := mock_services.NewMockUser(ctrl)
-		ctx := context.Background()
-		city := ""
-
-		log := logging.New()
-		userService := NewUserService(userStore, log)
-		users, err := userService.GetByCity(ctx, city)
+		users, err := userService.GetByCity(ctx, "")
 		assert.Error(t, err)
 		assert.Nil(t, users)
 	})
-	t.Run("when have city, but stores return error then error", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
 
-		userStore := mock_services.NewMockUser(ctrl)
-		ctx := context.Background()
+	t.Run("when have city, but stores return error then error", func(t *testing.T) {
 		city := "Sao Paulo"
 
 		userStore.
@@ -79,8 +67,6 @@ func TestUserService_GetByCity(t *testing.T) {
 			FindByCity(ctx, city).
 			Return(nil, errors.New(""))
 
-		log := logging.New()
-		userService := NewUserService(userStore, log)
 		users, err := userService.GetByCity(ctx, city)
 		assert.Error(t, err)
 		assert.Nil(t, users)
@@ -88,162 +74,115 @@ func TestUserService_GetByCity(t *testing.T) {
 }
 
 func TestUserService_Upload(t *testing.T) {
-	t.Skip()
-	t.Run("when all data have then no error", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
+	log := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
 
-		userStore := mock_services.NewMockUser(ctrl)
-		ctx := context.Background()
-		userCreate := &models.UserCreate{
-			FirstName: "Albert",
-			LastName:  "Guss",
+	userStore := mock_services.NewMockUser(ctrl)
+	ctx := context.Background()
+
+	userService := NewUserService(userStore, log)
+
+	t.Run("when all data have then no error", func(t *testing.T) {
+		userCreate := &models.UserEntity{
+			FirstName: "Robert",
+			LastName:  "Smith",
 			Contacts: []models.Contact{
 				{
-					Value: "+8748327432",
+					Value: "+48178323",
 					Type:  models.ContactTypeSMS,
 				},
 				{
-					Value:    "al@gmail.com",
+					Value:    "iaiw3br@gmail.com",
 					Type:     models.ContactTypeEmail,
 					IsActive: true,
 				},
 			},
-			City: "Paris",
+			City: "Saint-Petersburg",
 		}
 		userStore.
 			EXPECT().
 			Create(ctx, userCreate).
 			Return(nil)
 
-		data := "FirstName;SecondName;MobilePhone;Email;City\nAlbert;Guss;+8748327432;al@gmail.com;Paris\n"
+		data := "firstName;secondName;MobilePhone;IsMobileActive;Email;IsEmailActive;City\nRobert;Smith;+48178323;false;iaiw3br@gmail.com;true;Saint-Petersburg"
 		buf := bytes.NewBuffer([]byte(data))
 
-		log := logging.New()
-		userService := NewUserService(userStore, log)
 		users, err := userService.Upload(buf)
 		assert.NoError(t, err)
 		assert.NotNil(t, users)
 	})
 	t.Run("when first name in csv is empty then no error", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
-
-		userStore := mock_services.NewMockUser(ctrl)
-		ctx := context.Background()
-		userCreate := &models.UserCreate{
-			FirstName: "Albert",
-			LastName:  "Guss",
+		userCreate := &models.UserEntity{
+			FirstName: "Robert",
+			LastName:  "Smith",
 			Contacts: []models.Contact{
 				{
-					Value: "+8748327432",
+					Value: "+48178323",
 					Type:  models.ContactTypeSMS,
 				},
 				{
-					Value:    "al@gmail.com",
+					Value:    "iaiw3br@gmail.com",
 					Type:     models.ContactTypeEmail,
 					IsActive: true,
 				},
 			},
-			City: "Paris",
+			City: "Saint-Petersburg",
 		}
 		userStore.
 			EXPECT().
 			Create(ctx, userCreate).
 			Return(nil)
 
-		data := "FirstName;SecondName;MobilePhone;Email;City\n;Smith;+4723746273;ezolda@gmail.com;Berlin\nAlbert;Guss;+8748327432;al@gmail.com;Paris\n"
+		data := "firstName;secondName;MobilePhone;IsMobileActive;Email;IsEmailActive;City\nBoris;;+7312787312;false;iaiw3br@gmail.com;true;Saint-Petersburg\nRobert;Smith;+48178323;false;iaiw3br@gmail.com;true;Saint-Petersburg"
 		buf := bytes.NewBuffer([]byte(data))
 
-		log := logging.New()
-		userService := NewUserService(userStore, log)
 		users, err := userService.Upload(buf)
 		assert.NoError(t, err)
 		assert.Equal(t, 1, len(users))
 	})
 	t.Run("when last name in csv is empty then no error", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
 
-		userStore := mock_services.NewMockUser(ctrl)
-		ctx := context.Background()
-		userCreate := &models.UserCreate{
-			FirstName: "Albert",
-			LastName:  "Guss",
-			Contacts: []models.Contact{
-				{
-					Value: "+8748327432",
-					Type:  models.ContactTypeSMS,
-				},
-				{
-					Value:    "al@gmail.com",
-					Type:     models.ContactTypeEmail,
-					IsActive: true,
-				},
-			},
-			City: "Paris",
-		}
-		userStore.
-			EXPECT().
-			Create(ctx, userCreate).
-			Return(nil)
-
-		data := "FirstName;SecondName;MobilePhone;Email;City\nEzolda;;+4723746273;ezolda@gmail.com;Berlin\nAlbert;Guss;+8748327432;al@gmail.com;Paris\n"
+		data := "firstName;secondName;MobilePhone;IsMobileActive;Email;IsEmailActive;City\nBoris;;+7312787312;false;iaiw3br@gmail.com;true;Saint-Petersburg\nRobert;;+48178323;false;iaiw3br@gmail.com;true;Saint-Petersburg"
 		buf := bytes.NewBuffer([]byte(data))
 
-		log := logging.New()
-		userService := NewUserService(userStore, log)
 		users, err := userService.Upload(buf)
 		assert.NoError(t, err)
-		assert.Equal(t, 1, len(users))
+		assert.Equal(t, 0, len(users))
 	})
 	t.Run("when csv is invalid, there are too few cells then error", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
-
-		userStore := mock_services.NewMockUser(ctrl)
-
 		data := "FirstName;SecondName;MobilePhone;Email\nAlbert;Guss;+8748327432;al@gmail.com\n"
 		buf := bytes.NewBuffer([]byte(data))
 
-		log := logging.New()
-		userService := NewUserService(userStore, log)
 		users, err := userService.Upload(buf)
 		assert.Error(t, err)
 		assert.Nil(t, users)
 	})
 	t.Run("when csv is valid, but stores returns error then error", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
-
-		userStore := mock_services.NewMockUser(ctrl)
-		ctx := context.Background()
-		userCreate := &models.UserCreate{
-			FirstName: "Albert",
-			LastName:  "Guss",
+		userCreate := &models.UserEntity{
+			FirstName: "Boris",
+			LastName:  "Ivanov",
 			Contacts: []models.Contact{
 				{
-					Value: "+8748327432",
+					Value: "+7312787312",
 					Type:  models.ContactTypeSMS,
 				},
 				{
-					Value:    "al@gmail.com",
+					Value:    "iaiw3br@gmail.com",
 					Type:     models.ContactTypeEmail,
 					IsActive: true,
 				},
 			},
-			City: "Paris",
+			City: "Saint-Petersburg",
 		}
 		userStore.
 			EXPECT().
 			Create(ctx, userCreate).
 			Return(errors.New(""))
 
-		data := "FirstName;SecondName;MobilePhone;Email;City\nAlbert;Guss;+8748327432;al@gmail.com;Paris\n"
+		data := "firstName;secondName;MobilePhone;IsMobileActive;Email;IsEmailActive;City\nBoris;Ivanov;+7312787312;false;iaiw3br@gmail.com;true;Saint-Petersburg\nRobert;Smith;+48178323;false;iaiw3br@gmail.com;true;Saint-Petersburg"
 		buf := bytes.NewBuffer([]byte(data))
 
-		log := logging.New()
-		userService := NewUserService(userStore, log)
 		users, err := userService.Upload(buf)
 		assert.Error(t, err)
 		assert.Nil(t, users)

@@ -36,5 +36,7 @@ sql-queries: uptrace/bun
 
 # TODO
 - [x] graceful shutdown
+- [x] add grpc
+- [x] remove lorgus, use slog
 - [ ] send messages by telegram
 - [ ] send messages by what's app

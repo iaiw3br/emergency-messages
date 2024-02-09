@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"google.golang.org/grpc"
 	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -14,7 +15,6 @@ import (
 	"projects/emergency-messages/internal/controllers"
 	v2 "projects/emergency-messages/internal/controllers/grpc"
 	client "projects/emergency-messages/internal/databases/client/postgres"
-	"projects/emergency-messages/internal/logging"
 	mdlware "projects/emergency-messages/internal/middlewares"
 	"projects/emergency-messages/internal/models"
 	"projects/emergency-messages/internal/providers"
@@ -35,6 +35,10 @@ import (
 var (
 	shutdownTimeout = 5 * time.Second
 	contextTimeout  = 60 * time.Second
+)
+
+const (
+	envLocal = "local"
 )
 
 func Run() {
@@ -58,7 +62,7 @@ func startServer(ctx context.Context) error {
 			Addr:    listenAddr,
 			Handler: r,
 		}
-		logging  = logging.New()
+		logging  = setupLogger()
 		url      = os.Getenv("DATABASE_URL")
 		grpcPort = os.Getenv("GRPC_PORT")
 	)
@@ -110,7 +114,23 @@ func startServer(ctx context.Context) error {
 	return nil
 }
 
-func registerEntities(db *bun.DB, grpcServer *grpc.Server, l logging.Logger, r *chi.Mux) {
+func setupLogger() *slog.Logger {
+	env := os.Getenv("ENV")
+	var log *slog.Logger
+	switch env {
+	case envLocal:
+		log = slog.New(
+			slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}),
+		)
+	default:
+		log = slog.New(
+			slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelError}),
+		)
+	}
+	return log
+}
+
+func registerEntities(db *bun.DB, grpcServer *grpc.Server, l *slog.Logger, r *chi.Mux) {
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
@@ -141,7 +161,7 @@ func registerEntities(db *bun.DB, grpcServer *grpc.Server, l logging.Logger, r *
 	routers.Load()
 }
 
-func getProviders(l logging.Logger) *providers.SendManager {
+func getProviders(l *slog.Logger) *providers.SendManager {
 	sender := providers.New()
 
 	mailg := mail_gun.NewEmailMailgClient(l)

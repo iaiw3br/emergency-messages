@@ -1,7 +1,8 @@
 package services
 
 import (
-	"projects/emergency-messages/internal/logging"
+	"log/slog"
+	"os"
 	"projects/emergency-messages/internal/models"
 	"projects/emergency-messages/internal/providers"
 	"projects/emergency-messages/internal/providers/email/mail_gun"
@@ -20,7 +21,7 @@ func TestNewMessage(t *testing.T) {
 	templateStore := mock_service.NewMockTemplateStore(controller)
 	userStore := mock_service.NewMockUser(controller)
 
-	log := logging.New()
+	log := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	client := providers.New()
 	mail := mail_gun.NewEmailMailgClient(log)
 	client.AddProvider(mail, models.ContactTypeEmail)

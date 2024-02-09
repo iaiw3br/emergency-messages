@@ -3,17 +3,17 @@ package controllers
 import (
 	"context"
 	"encoding/json"
+	"log/slog"
 	"net/http"
-	"projects/emergency-messages/internal/logging"
 	"projects/emergency-messages/internal/services"
 )
 
 type User struct {
 	userService services.UserService
-	log         logging.Logger
+	log         *slog.Logger
 }
 
-func NewUser(userService services.UserService, log logging.Logger) *User {
+func NewUser(userService services.UserService, log *slog.Logger) *User {
 	return &User{
 		userService: userService,
 		log:         log,
@@ -25,13 +25,13 @@ func (u User) GetByCity(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
 	users, err := u.userService.GetByCity(ctx, city)
 	if assertError(err, w) {
-		u.log.Error("User.GetByCity() error:", err)
+		u.log.Error("getting by city", err)
 		return
 	}
 
 	usersBytes, err := json.Marshal(users)
 	if err != nil {
-		u.log.Error("cannot marshal users")
+		u.log.Error("cannot marshalling users")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -50,13 +50,13 @@ func (u User) Upload(w http.ResponseWriter, r *http.Request) {
 
 	usersCreated, err := u.userService.Upload(file)
 	if assertError(err, w) {
-		u.log.Error("User.Upload() error:", err)
+		u.log.Error("uploading user", err)
 		return
 	}
 
 	usersBytes, err := json.Marshal(usersCreated)
 	if err != nil {
-		u.log.Error("cannot marshal users")
+		u.log.Error("cannot marshalling users")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}

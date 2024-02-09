@@ -1,8 +1,8 @@
 package twil
 
 import (
+	"log/slog"
 	"os"
-	"projects/emergency-messages/internal/logging"
 	"projects/emergency-messages/internal/models"
 
 	"github.com/twilio/twilio-go"
@@ -10,7 +10,7 @@ import (
 )
 
 type ClientTwilSMS struct {
-	log logging.Logger
+	log *slog.Logger
 }
 
 func (c *ClientTwilSMS) Send(newMessage models.Message, phone string) error {
@@ -26,13 +26,16 @@ func (c *ClientTwilSMS) Send(newMessage models.Message, phone string) error {
 
 	_, err := client.Api.CreateMessage(params)
 	if err != nil {
-		c.log.Errorf("mobile twil couldn't send message: %v, phone: %s. Error: %v", newMessage, phone, err)
+		c.log.With(
+			slog.Any("message", newMessage),
+			slog.String("phone", phone)).
+			Error("sending twil message", err)
 		return err
 	}
 	return nil
 }
 
-func NewMobileTwilClient(log logging.Logger) *ClientTwilSMS {
+func NewMobileTwilClient(log *slog.Logger) *ClientTwilSMS {
 	return &ClientTwilSMS{
 		log: log,
 	}

@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"projects/emergency-messages/internal/logging"
+	"log/slog"
 	"projects/emergency-messages/internal/models"
 	"strconv"
 )
@@ -16,7 +16,7 @@ const semicolon = ';'
 
 type UserService struct {
 	userStore User
-	log       logging.Logger
+	log       *slog.Logger
 }
 
 type User interface {
@@ -24,7 +24,7 @@ type User interface {
 	FindByCity(ctx context.Context, city string) ([]models.UserEntity, error)
 }
 
-func NewUserService(userStore User, log logging.Logger) UserService {
+func NewUserService(userStore User, log *slog.Logger) UserService {
 	return UserService{
 		userStore: userStore,
 		log:       log,
@@ -34,18 +34,18 @@ func NewUserService(userStore User, log logging.Logger) UserService {
 func (s *UserService) GetByCity(ctx context.Context, city string) ([]models.User, error) {
 	if city == "" {
 		err := errors.New("city is empty")
-		s.log.Error(err)
+		s.log.Error("checking input data", err)
 		return nil, err
 	}
 	usersStore, err := s.userStore.FindByCity(ctx, city)
 	if err != nil {
-		s.log.Error(err)
+		s.log.Error("finding by city", err)
 		return nil, err
 	}
 
 	users, err := s.transformStoreModelsByCityToUsers(usersStore)
 	if err != nil {
-		s.log.Error(err)
+		s.log.Error("transforming store model to user", err)
 		return nil, err
 	}
 
@@ -56,7 +56,7 @@ func (s *UserService) Upload(csvData io.Reader) ([]*models.UserCreate, error) {
 	ctx := context.Background()
 	users, err := s.getUsersFromCSV(csvData)
 	if err != nil {
-		s.log.Error(err)
+		s.log.Error("getting users from csv", err)
 		return nil, err
 	}
 
@@ -65,17 +65,17 @@ func (s *UserService) Upload(csvData io.Reader) ([]*models.UserCreate, error) {
 	for _, user := range users {
 		userStore, err := s.transformUserCreateToStoreModel(user)
 		if err != nil {
-			s.log.Error(err)
+			s.log.Error("transforming user to store model", err)
 			return nil, err
 		}
 		if err = s.userStore.Create(ctx, userStore); err != nil {
-			s.log.Error(err)
+			s.log.Error("creating user", err)
 			return nil, err
 		}
 
 		userCreated, err := s.transformStoreModelToUser(userStore)
 		if err != nil {
-			s.log.Error(err)
+			s.log.Error("transforming store model to user", err)
 			return nil, err
 		}
 		result = append(result, userCreated)
@@ -89,7 +89,7 @@ func (s *UserService) getUsersFromCSV(csvData io.Reader) ([]*models.UserCreate, 
 
 	records, err := csvReader.ReadAll()
 	if err != nil {
-		s.log.Error(err)
+		s.log.Error("reading csv", err)
 		return nil, err
 	}
 
@@ -125,7 +125,7 @@ func (s *UserService) getUsersFromCSV(csvData io.Reader) ([]*models.UserCreate, 
 			FirstName: firstName,
 			LastName:  lastName,
 			Contacts:  contacts,
-			City:      v[4],
+			City:      v[6],
 		}
 
 		users = append(users, user)
