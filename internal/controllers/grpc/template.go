@@ -6,8 +6,8 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"log/slog"
 	"projects/emergency-messages/internal/errorx"
-	"projects/emergency-messages/internal/logging"
 	"projects/emergency-messages/internal/models"
 	api "projects/emergency-messages/protos"
 )
@@ -21,10 +21,10 @@ type TemplateService interface {
 type template struct {
 	templateService TemplateService
 	api.UnimplementedTemplateServer
-	log logging.Logger
+	log *slog.Logger
 }
 
-func Register(grpcServer *grpc.Server, templateService TemplateService, log logging.Logger) {
+func Register(grpcServer *grpc.Server, templateService TemplateService, log *slog.Logger) {
 	api.RegisterTemplateServer(
 		grpcServer,
 		&template{

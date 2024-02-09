@@ -4,18 +4,18 @@ import (
 	"context"
 	"encoding/json"
 	"io"
+	"log/slog"
 	"net/http"
-	"projects/emergency-messages/internal/logging"
 	"projects/emergency-messages/internal/models"
 	"projects/emergency-messages/internal/services"
 )
 
 type Message struct {
 	messageService *services.MessageService
-	log            logging.Logger
+	log            *slog.Logger
 }
 
-func NewMessage(messageService *services.MessageService, log logging.Logger) *Message {
+func NewMessage(messageService *services.MessageService, log *slog.Logger) *Message {
 	return &Message{
 		messageService: messageService,
 		log:            log,

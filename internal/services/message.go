@@ -4,8 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log/slog"
 	"projects/emergency-messages/internal/errorx"
-	"projects/emergency-messages/internal/logging"
 	"projects/emergency-messages/internal/models"
 	"projects/emergency-messages/internal/providers"
 	"runtime"
@@ -18,7 +18,7 @@ type MessageService struct {
 	messageStore  Message
 	templateStore TemplateStore
 	userStore     User
-	log           logging.Logger
+	log           *slog.Logger
 	sender        *providers.SendManager
 }
 
@@ -27,7 +27,7 @@ type Message interface {
 	UpdateStatus(ctx context.Context, id uuid.UUID, status models.MessageStatus) error
 }
 
-func NewMessage(messageStore Message, templateStore TemplateStore, userStore User, sender *providers.SendManager, log logging.Logger) *MessageService {
+func NewMessage(messageStore Message, templateStore TemplateStore, userStore User, sender *providers.SendManager, log *slog.Logger) *MessageService {
 	return &MessageService{
 		messageStore:  messageStore,
 		templateStore: templateStore,
@@ -40,21 +40,21 @@ func NewMessage(messageStore Message, templateStore TemplateStore, userStore Use
 func (s *MessageService) Send(ctx context.Context, message models.CreateMessage) error {
 	template, err := s.templateStore.GetByID(ctx, message.TemplateID)
 	if err != nil {
+		s.log.With(slog.Any("templateID", message.TemplateID)).
+			Error("getting template", err)
 		if err == sql.ErrNoRows {
-			s.log.Errorf("sending message: couldn't find template by id: %s", message.TemplateID)
 			return errorx.ErrNotFound
 		}
-		s.log.Errorf("sending message: internal error in template GetByID(): %v", err)
 		return errorx.ErrInternal
 	}
 
 	usersStore, err := s.userStore.FindByCity(ctx, message.City)
 	if err != nil {
+		s.log.With(slog.Any("city", message.City)).
+			Error("finding user by city", err)
 		if err == sql.ErrNoRows {
-			s.log.Errorf("sending message: couldn't find user by city: %s", message.City)
 			return errorx.ErrNotFound
 		}
-		s.log.Errorf("sending message: internal error in user FindByCity(): %v", err)
 		return errorx.ErrInternal
 	}
 
@@ -74,7 +74,7 @@ func (s *MessageService) Send(ctx context.Context, message models.CreateMessage)
 
 	users, err := s.transformUsersStoreToUsers(usersStore)
 	if err != nil {
-		s.log.Error(err)
+		s.log.Error("transforming store model to user", err)
 		return err
 	}
 
@@ -95,22 +95,22 @@ func (s *MessageService) send(ctx context.Context, usersCh <-chan *models.User, 
 
 			storeModel, err := s.transformMessageToStoreModel(newMessage)
 			if err != nil {
-				s.log.Error(err)
+				s.log.Error("transforming message to store model", err)
 				continue
 			}
 
 			if err = s.messageStore.Create(ctx, storeModel); err != nil {
-				s.log.Error(err)
+				s.log.Error("creating message", err)
 				continue
 			}
 
 			if err = s.sender.Send(newMessage, contact); err != nil {
-				s.log.Error(err)
+				s.log.Error("sending message", err)
 				continue
 			}
 
 			if err = s.messageStore.UpdateStatus(ctx, storeModel.ID, models.Delivered); err != nil {
-				s.log.Error(err)
+				s.log.Error("updating message", err)
 				continue
 			}
 		}

@@ -8,22 +8,27 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
+	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	mock_controllers "projects/emergency-messages/internal/controllers/mocks"
 	"projects/emergency-messages/internal/errorx"
-	"projects/emergency-messages/internal/logging"
 	"projects/emergency-messages/internal/models"
 	"testing"
 )
 
 func TestTemplate_Create(t *testing.T) {
+	log := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	r := chi.NewRouter()
+
+	controller := gomock.NewController(t)
+	defer controller.Finish()
+
+	ctx := context.Background()
+	service := mock_controllers.NewMockTemplateService(controller)
+
 	t.Run("when data is valid then no error", func(t *testing.T) {
-		r := chi.NewRouter()
-
-		controller := gomock.NewController(t)
-		defer controller.Finish()
-
 		// Prepare the request body
 		body := &templateCreate{
 			Subject: "SomeValidSubject",
@@ -34,14 +39,11 @@ func TestTemplate_Create(t *testing.T) {
 			Subject: body.Subject,
 			Text:    body.Text,
 		}
-		ctx := context.Background()
-		service := mock_controllers.NewMockTemplateService(controller)
 
 		service.EXPECT().
 			Create(ctx, newTemplate).
 			Return(nil)
 
-		log := logging.New()
 		tmpl := NewTemplate(service, log)
 
 		r.Post("/templates", tmpl.Create)
@@ -64,14 +66,6 @@ func TestTemplate_Create(t *testing.T) {
 	})
 
 	t.Run("when body is invalid then error", func(t *testing.T) {
-		r := chi.NewRouter()
-
-		controller := gomock.NewController(t)
-		defer controller.Finish()
-
-		service := mock_controllers.NewMockTemplateService(controller)
-
-		log := logging.New()
 		tmpl := NewTemplate(service, log)
 
 		r.Post("/templates", tmpl.Create)
@@ -95,11 +89,6 @@ func TestTemplate_Create(t *testing.T) {
 	})
 
 	t.Run("when service return validation error then error", func(t *testing.T) {
-		r := chi.NewRouter()
-
-		controller := gomock.NewController(t)
-		defer controller.Finish()
-
 		// Prepare the request body
 		body := &templateCreate{
 			Subject: "SomeValidSubject",
@@ -110,14 +99,11 @@ func TestTemplate_Create(t *testing.T) {
 			Subject: body.Subject,
 			Text:    body.Text,
 		}
-		ctx := context.Background()
-		service := mock_controllers.NewMockTemplateService(controller)
 
 		service.EXPECT().
 			Create(ctx, newTemplate).
 			Return(errorx.ErrValidation)
 
-		log := logging.New()
 		tmpl := NewTemplate(service, log)
 
 		r.Post("/templates", tmpl.Create)
@@ -140,11 +126,6 @@ func TestTemplate_Create(t *testing.T) {
 	})
 
 	t.Run("when service return internal error then error", func(t *testing.T) {
-		r := chi.NewRouter()
-
-		controller := gomock.NewController(t)
-		defer controller.Finish()
-
 		// Prepare the request body
 		body := &templateCreate{
 			Subject: "SomeValidSubject",
@@ -155,14 +136,11 @@ func TestTemplate_Create(t *testing.T) {
 			Subject: body.Subject,
 			Text:    body.Text,
 		}
-		ctx := context.Background()
-		service := mock_controllers.NewMockTemplateService(controller)
 
 		service.EXPECT().
 			Create(ctx, newTemplate).
 			Return(errorx.ErrInternal)
 
-		log := logging.New()
 		tmpl := NewTemplate(service, log)
 
 		r.Post("/templates", tmpl.Create)
@@ -186,12 +164,16 @@ func TestTemplate_Create(t *testing.T) {
 }
 
 func TestTemplate_Update(t *testing.T) {
+	log := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	r := chi.NewRouter()
+
+	controller := gomock.NewController(t)
+	defer controller.Finish()
+
+	ctx := context.Background()
+	service := mock_controllers.NewMockTemplateService(controller)
+
 	t.Run("when data is valid then no error", func(t *testing.T) {
-		r := chi.NewRouter()
-
-		controller := gomock.NewController(t)
-		defer controller.Finish()
-
 		// Prepare the request body
 		body := &templateUpdate{
 			Subject: "SomeValidSubject",
@@ -202,14 +184,11 @@ func TestTemplate_Update(t *testing.T) {
 			Subject: body.Subject,
 			Text:    body.Text,
 		}
-		ctx := context.Background()
-		service := mock_controllers.NewMockTemplateService(controller)
 
 		service.EXPECT().
 			Update(ctx, newTemplate).
 			Return(nil)
 
-		log := logging.New()
 		tmpl := NewTemplate(service, log)
 
 		r.Post("/templates", tmpl.Update)
@@ -232,14 +211,6 @@ func TestTemplate_Update(t *testing.T) {
 	})
 
 	t.Run("when body is invalid then error", func(t *testing.T) {
-		r := chi.NewRouter()
-
-		controller := gomock.NewController(t)
-		defer controller.Finish()
-
-		service := mock_controllers.NewMockTemplateService(controller)
-
-		log := logging.New()
 		tmpl := NewTemplate(service, log)
 
 		r.Post("/templates", tmpl.Update)
@@ -263,11 +234,6 @@ func TestTemplate_Update(t *testing.T) {
 	})
 
 	t.Run("when service return validation error then error", func(t *testing.T) {
-		r := chi.NewRouter()
-
-		controller := gomock.NewController(t)
-		defer controller.Finish()
-
 		// Prepare the request body
 		body := &templateUpdate{
 			Subject: "SomeValidSubject",
@@ -278,14 +244,11 @@ func TestTemplate_Update(t *testing.T) {
 			Subject: body.Subject,
 			Text:    body.Text,
 		}
-		ctx := context.Background()
-		service := mock_controllers.NewMockTemplateService(controller)
 
 		service.EXPECT().
 			Update(ctx, newTemplate).
 			Return(errorx.ErrValidation)
 
-		log := logging.New()
 		tmpl := NewTemplate(service, log)
 
 		r.Post("/templates", tmpl.Update)
@@ -308,11 +271,6 @@ func TestTemplate_Update(t *testing.T) {
 	})
 
 	t.Run("when service return internal error then error", func(t *testing.T) {
-		r := chi.NewRouter()
-
-		controller := gomock.NewController(t)
-		defer controller.Finish()
-
 		// Prepare the request body
 		body := &templateUpdate{
 			Subject: "SomeValidSubject",
@@ -323,14 +281,11 @@ func TestTemplate_Update(t *testing.T) {
 			Subject: body.Subject,
 			Text:    body.Text,
 		}
-		ctx := context.Background()
-		service := mock_controllers.NewMockTemplateService(controller)
 
 		service.EXPECT().
 			Update(ctx, newTemplate).
 			Return(errorx.ErrInternal)
 
-		log := logging.New()
 		tmpl := NewTemplate(service, log)
 
 		r.Post("/templates", tmpl.Update)
@@ -354,22 +309,22 @@ func TestTemplate_Update(t *testing.T) {
 }
 
 func TestTemplate_Delete(t *testing.T) {
+	log := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	r := chi.NewRouter()
+
+	controller := gomock.NewController(t)
+	defer controller.Finish()
+	service := mock_controllers.NewMockTemplateService(controller)
+
+	ctx := context.Background()
+
 	t.Run("when data is valid then no error", func(t *testing.T) {
-		r := chi.NewRouter()
-
-		controller := gomock.NewController(t)
-		defer controller.Finish()
-
-		ctx := context.Background()
-		service := mock_controllers.NewMockTemplateService(controller)
-
 		id := "7d603549-b079-4016-b81e-9e4386c1de21"
 
 		service.EXPECT().
 			Delete(ctx, id).
 			Return(nil)
 
-		log := logging.New()
 		tmpl := NewTemplate(service, log)
 
 		r.Delete(fmt.Sprintf("/templates/%s", id), tmpl.Delete)
@@ -388,21 +343,12 @@ func TestTemplate_Delete(t *testing.T) {
 	})
 
 	t.Run("when get not found then error", func(t *testing.T) {
-		r := chi.NewRouter()
-
-		controller := gomock.NewController(t)
-		defer controller.Finish()
-
-		ctx := context.Background()
-		service := mock_controllers.NewMockTemplateService(controller)
-
 		id := "7d603549-b079-4016-b81e-9e4386c1de21"
 
 		service.EXPECT().
 			Delete(ctx, id).
 			Return(errorx.ErrNotFound)
 
-		log := logging.New()
 		tmpl := NewTemplate(service, log)
 
 		r.Delete(fmt.Sprintf("/templates/%s", id), tmpl.Delete)
@@ -421,21 +367,12 @@ func TestTemplate_Delete(t *testing.T) {
 	})
 
 	t.Run("when get internal error then error", func(t *testing.T) {
-		r := chi.NewRouter()
-
-		controller := gomock.NewController(t)
-		defer controller.Finish()
-
-		ctx := context.Background()
-		service := mock_controllers.NewMockTemplateService(controller)
-
 		id := "7d603549-b079-4016-b81e-9e4386c1de21"
 
 		service.EXPECT().
 			Delete(ctx, id).
 			Return(errorx.ErrInternal)
 
-		log := logging.New()
 		tmpl := NewTemplate(service, log)
 
 		r.Delete(fmt.Sprintf("/templates/%s", id), tmpl.Delete)

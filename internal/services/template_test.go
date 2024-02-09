@@ -4,7 +4,8 @@ import (
 	"context"
 	"errors"
 	"github.com/google/uuid"
-	"projects/emergency-messages/internal/logging"
+	"log/slog"
+	"os"
 	"projects/emergency-messages/internal/models"
 	"projects/emergency-messages/internal/services/mocks"
 	"testing"
@@ -14,18 +15,20 @@ import (
 )
 
 func TestTemplate_Create(t *testing.T) {
-	t.Run("when all data have then no error", func(t *testing.T) {
-		controller := gomock.NewController(t)
-		defer controller.Finish()
+	log := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	controller := gomock.NewController(t)
+	defer controller.Finish()
 
-		store := mock_services.NewMockTemplateStore(controller)
+	store := mock_services.NewMockTemplateStore(controller)
+	ctx := context.Background()
+	service := NewTemplate(store, log)
+
+	t.Run("when all data have then no error", func(t *testing.T) {
 		template := &models.TemplateCreate{
 			Subject: "1",
 			Text:    "2",
 		}
-		ctx := context.Background()
-		log := logging.New()
-		service := NewTemplate(store, log)
+
 		templateStore := &models.TemplateEntity{
 			Subject: "1",
 			Text:    "2",
@@ -40,40 +43,22 @@ func TestTemplate_Create(t *testing.T) {
 		assert.NoError(t, err)
 	})
 	t.Run("when subject is empty then error", func(t *testing.T) {
-		controller := gomock.NewController(t)
-		defer controller.Finish()
-
-		store := mock_services.NewMockTemplateStore(controller)
 		template := &models.TemplateCreate{
 			Text: "2",
 		}
-		ctx := context.Background()
-		log := logging.New()
-		service := NewTemplate(store, log)
 
 		err := service.Create(ctx, template)
 		assert.Error(t, err)
 	})
 	t.Run("when text is empty then error", func(t *testing.T) {
-		controller := gomock.NewController(t)
-		defer controller.Finish()
-
-		store := mock_services.NewMockTemplateStore(controller)
 		template := &models.TemplateCreate{
 			Subject: "2",
 		}
-		ctx := context.Background()
-		log := logging.New()
-		service := NewTemplate(store, log)
 
 		err := service.Create(ctx, template)
 		assert.Error(t, err)
 	})
 	t.Run("when error in update then error", func(t *testing.T) {
-		controller := gomock.NewController(t)
-		defer controller.Finish()
-
-		store := mock_services.NewMockTemplateStore(controller)
 		template := &models.TemplateCreate{
 			Text:    "2",
 			Subject: "2",
@@ -82,9 +67,6 @@ func TestTemplate_Create(t *testing.T) {
 			Subject: template.Subject,
 			Text:    template.Text,
 		}
-		ctx := context.Background()
-		log := logging.New()
-		service := NewTemplate(store, log)
 
 		store.
 			EXPECT().
@@ -98,10 +80,10 @@ func TestTemplate_Create(t *testing.T) {
 }
 
 func TestNewTemplate(t *testing.T) {
+	log := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	controller := gomock.NewController(t)
 	defer controller.Finish()
 
-	log := logging.New()
 	store := mock_services.NewMockTemplateStore(controller)
 	res := NewTemplate(store, log)
 	assert.NotNil(t, res)
@@ -110,13 +92,14 @@ func TestNewTemplate(t *testing.T) {
 }
 
 func TestTemplate_Delete(t *testing.T) {
+	log := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	controller := gomock.NewController(t)
+	defer controller.Finish()
+
+	ctx := context.Background()
+	store := mock_services.NewMockTemplateStore(controller)
+
 	t.Run("when stores doesn't return error then no error", func(t *testing.T) {
-		controller := gomock.NewController(t)
-		defer controller.Finish()
-
-		ctx := context.Background()
-		store := mock_services.NewMockTemplateStore(controller)
-
 		uidStr := "9dfc0a1d-7582-40eb-bc50-53a973bd1dbf"
 		uid, err := uuid.Parse(uidStr)
 		assert.NoError(t, err)
@@ -126,19 +109,12 @@ func TestTemplate_Delete(t *testing.T) {
 			Delete(ctx, uid, gomock.Any()).
 			Return(nil)
 
-		log := logging.New()
 		service := NewTemplate(store, log)
 
 		err = service.Delete(ctx, uidStr)
 		assert.NoError(t, err)
 	})
 	t.Run("when stores returns error then error", func(t *testing.T) {
-		controller := gomock.NewController(t)
-		defer controller.Finish()
-
-		ctx := context.Background()
-		store := mock_services.NewMockTemplateStore(controller)
-
 		uidStr := "9dfc0a1d-7582-40eb-bc50-53a973bd1dbf"
 		uid, err := uuid.Parse(uidStr)
 		assert.NoError(t, err)
@@ -148,7 +124,6 @@ func TestTemplate_Delete(t *testing.T) {
 			Delete(ctx, uid, gomock.Any()).
 			Return(errors.New(""))
 
-		log := logging.New()
 		service := NewTemplate(store, log)
 
 		err = service.Delete(ctx, uidStr)
@@ -157,13 +132,14 @@ func TestTemplate_Delete(t *testing.T) {
 }
 
 func TestTemplate_Update(t *testing.T) {
+	log := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	controller := gomock.NewController(t)
+	defer controller.Finish()
+
+	ctx := context.Background()
+	store := mock_services.NewMockTemplateStore(controller)
+
 	t.Run("when all data have then no error", func(t *testing.T) {
-		controller := gomock.NewController(t)
-		defer controller.Finish()
-
-		ctx := context.Background()
-		store := mock_services.NewMockTemplateStore(controller)
-
 		uidStr := "9dfc0a1d-7582-40eb-bc50-53a973bd1dbf"
 		uid, err := uuid.Parse(uidStr)
 		assert.NoError(t, err)
@@ -183,19 +159,12 @@ func TestTemplate_Update(t *testing.T) {
 			Update(ctx, templateStore).
 			Return(nil)
 
-		log := logging.New()
 		service := NewTemplate(store, log)
 
 		err = service.Update(ctx, updateTemplate)
 		assert.NoError(t, err)
 	})
 	t.Run("when stores has error then error", func(t *testing.T) {
-		controller := gomock.NewController(t)
-		defer controller.Finish()
-
-		ctx := context.Background()
-		store := mock_services.NewMockTemplateStore(controller)
-
 		uidStr := "9dfc0a1d-7582-40eb-bc50-53a973bd1dbf"
 		uid, err := uuid.Parse(uidStr)
 		assert.NoError(t, err)
@@ -215,24 +184,17 @@ func TestTemplate_Update(t *testing.T) {
 			Update(ctx, templateStore).
 			Return(errors.New(""))
 
-		log := logging.New()
 		service := NewTemplate(store, log)
 
 		err = service.Update(ctx, updateTemplate)
 		assert.Error(t, err)
 	})
 	t.Run("when stores has error then error", func(t *testing.T) {
-		controller := gomock.NewController(t)
-		defer controller.Finish()
-
-		ctx := context.Background()
-		store := mock_services.NewMockTemplateStore(controller)
 		updateTemplate := &models.TemplateUpdate{
 			Subject: "1",
 			Text:    "2",
 		}
 
-		log := logging.New()
 		service := NewTemplate(store, log)
 
 		err := service.Update(ctx, updateTemplate)

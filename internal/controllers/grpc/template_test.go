@@ -14,14 +14,15 @@ import (
 )
 
 func Test_template_Delete(t *testing.T) {
+	controller := gomock.NewController(t)
+	defer controller.Finish()
+
+	service := mock_controllers.NewMockTemplateService(controller)
+	temp := template{templateService: service}
+
+	ctx := context.Background()
+
 	t.Run("when all data is invalid then no error", func(t *testing.T) {
-		controller := gomock.NewController(t)
-		defer controller.Finish()
-
-		service := mock_controllers.NewMockTemplateService(controller)
-		temp := template{templateService: service}
-
-		ctx := context.Background()
 		req := &api.DeleteRequest{Id: "abc"}
 
 		service.EXPECT().
@@ -34,13 +35,6 @@ func Test_template_Delete(t *testing.T) {
 	})
 
 	t.Run("when store returns not found error then error", func(t *testing.T) {
-		controller := gomock.NewController(t)
-		defer controller.Finish()
-
-		service := mock_controllers.NewMockTemplateService(controller)
-		temp := template{templateService: service}
-
-		ctx := context.Background()
 		req := &api.DeleteRequest{Id: "abc"}
 
 		service.EXPECT().
@@ -58,13 +52,6 @@ func Test_template_Delete(t *testing.T) {
 	})
 
 	t.Run("when store returns internal error then error", func(t *testing.T) {
-		controller := gomock.NewController(t)
-		defer controller.Finish()
-
-		service := mock_controllers.NewMockTemplateService(controller)
-		temp := template{templateService: service}
-
-		ctx := context.Background()
 		req := &api.DeleteRequest{Id: "abc"}
 
 		service.EXPECT().
@@ -83,12 +70,12 @@ func Test_template_Delete(t *testing.T) {
 }
 
 func Test_template_Create(t *testing.T) {
-	t.Run("when all data is invalid then no error", func(t *testing.T) {
-		controller := gomock.NewController(t)
-		defer controller.Finish()
-		service := mock_controllers.NewMockTemplateService(controller)
+	controller := gomock.NewController(t)
+	defer controller.Finish()
+	service := mock_controllers.NewMockTemplateService(controller)
 
-		ctx := context.Background()
+	ctx := context.Background()
+	t.Run("when all data is invalid then no error", func(t *testing.T) {
 		tmpl := &api.CreateRequest{
 			Text:    "321",
 			Subject: "subject",
@@ -110,11 +97,6 @@ func Test_template_Create(t *testing.T) {
 	})
 
 	t.Run("when store returns validation error then error", func(t *testing.T) {
-		controller := gomock.NewController(t)
-		defer controller.Finish()
-		service := mock_controllers.NewMockTemplateService(controller)
-
-		ctx := context.Background()
 		tmpl := &api.CreateRequest{
 			Text:    "321",
 			Subject: "subject",
@@ -141,11 +123,6 @@ func Test_template_Create(t *testing.T) {
 	})
 
 	t.Run("when store returns internal error then error", func(t *testing.T) {
-		controller := gomock.NewController(t)
-		defer controller.Finish()
-		service := mock_controllers.NewMockTemplateService(controller)
-
-		ctx := context.Background()
 		tmpl := &api.CreateRequest{
 			Text:    "321",
 			Subject: "subject",
@@ -173,12 +150,12 @@ func Test_template_Create(t *testing.T) {
 }
 
 func Test_template_Update(t *testing.T) {
-	t.Run("when all data is valid then no error", func(t *testing.T) {
-		controller := gomock.NewController(t)
-		defer controller.Finish()
-		service := mock_controllers.NewMockTemplateService(controller)
+	controller := gomock.NewController(t)
+	defer controller.Finish()
+	service := mock_controllers.NewMockTemplateService(controller)
 
-		ctx := context.Background()
+	ctx := context.Background()
+	t.Run("when all data is valid then no error", func(t *testing.T) {
 		tmpl := &api.UpdateRequest{
 			Text:    "321",
 			Subject: "subject",
@@ -200,11 +177,6 @@ func Test_template_Update(t *testing.T) {
 	})
 
 	t.Run("when all data is invalid then error", func(t *testing.T) {
-		controller := gomock.NewController(t)
-		defer controller.Finish()
-		service := mock_controllers.NewMockTemplateService(controller)
-
-		ctx := context.Background()
 		tmpl := &api.UpdateRequest{
 			Text:    "321",
 			Subject: "subject",
@@ -231,11 +203,6 @@ func Test_template_Update(t *testing.T) {
 	})
 
 	t.Run("when all data is not found then error", func(t *testing.T) {
-		controller := gomock.NewController(t)
-		defer controller.Finish()
-		service := mock_controllers.NewMockTemplateService(controller)
-
-		ctx := context.Background()
 		tmpl := &api.UpdateRequest{
 			Text:    "321",
 			Subject: "subject",
@@ -262,11 +229,6 @@ func Test_template_Update(t *testing.T) {
 	})
 
 	t.Run("when all data is internal error then error", func(t *testing.T) {
-		controller := gomock.NewController(t)
-		defer controller.Finish()
-		service := mock_controllers.NewMockTemplateService(controller)
-
-		ctx := context.Background()
 		tmpl := &api.UpdateRequest{
 			Text:    "321",
 			Subject: "subject",
