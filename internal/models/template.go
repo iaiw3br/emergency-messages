@@ -53,5 +53,7 @@ type TemplateEntity struct {
 	ID            uuid.UUID  `bun:"type:uuid,default:uuid_generate_v4()"`
 	Subject       string     `bun:"subject,notnull"`
 	Text          string     `bun:"text,notnull"`
-	DeletedAt     *time.Time `bun:",nullzero"`
+	DeletedAt     *time.Time `bun:"deleted_at,nullzero"`
+	CreatedAt     *time.Time `bun:"created_at,nullzero"`
+	UpdatedAt     *time.Time `bun:"updated_at,nullzero"`
 }

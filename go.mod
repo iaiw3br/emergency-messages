@@ -3,6 +3,7 @@ module projects/emergency-messages
 go 1.20
 
 require (
+	github.com/confluentinc/confluent-kafka-go/v2 v2.3.0
 	github.com/go-chi/chi/v5 v5.0.10
 	github.com/golang-migrate/migrate/v4 v4.16.2
 	github.com/google/uuid v1.5.0
@@ -16,7 +17,7 @@ require (
 	github.com/uptrace/bun/dialect/pgdialect v1.1.16
 	go.uber.org/mock v0.3.0
 	golang.org/x/time v0.5.0
-	google.golang.org/grpc v1.51.0
+	google.golang.org/grpc v1.54.0
 	google.golang.org/protobuf v1.30.0
 )
 
@@ -56,6 +57,6 @@ require (
 	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/tools v0.13.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
-	google.golang.org/genproto v0.0.0-20230110181048-76db0878b65f // indirect
+	google.golang.org/genproto v0.0.0-20230331144136-dcfb400f0633 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

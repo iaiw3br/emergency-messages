@@ -30,7 +30,7 @@ func (m Message) Send(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var message models.CreateMessage
+	var message models.MessageRequest
 	if err = json.Unmarshal(b, &message); err != nil {
 		m.log.Error("cannot unmarshal body")
 		w.WriteHeader(http.StatusBadRequest)
