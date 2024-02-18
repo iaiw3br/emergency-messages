@@ -24,6 +24,9 @@ export MOBILE_TWIL_AUTH_TOKEN='3537af2e99b5'
 export MOBILE_PHONE_EMERGENCY_SERVICE='+783172873'
 ```  
 
+## Workflow
+![emergency-service](assets/workflow.svg)
+
 ## Libriraries
 ```
 route: go-chi
