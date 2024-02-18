@@ -54,6 +54,7 @@ func (s *MessageService) Send(ctx context.Context, message models.MessageRequest
 		Subject: template.Subject,
 		Text:    fmt.Sprintf(template.Text, message.City, message.Strength),
 		Status:  models.Created,
+		City:    message.City,
 	}
 
 	messageBytes, err := json.Marshal(newMessage)
