@@ -40,7 +40,11 @@ tasks:
 
   migrate-fix:
     cmds:
-      - migrate -path ./internal/databases/migrations -database -database $DATABASE_URL?sslmode=disable force {{.NUMBER}}
+      - migrate -path ./internal/databases/migrations -database $DATABASE_URL?sslmode=disable force {{.NUMBER}}
+
+  migrate-down:
+    cmds:
+      - migrate -path ./internal/databases/migrations -database $DATABASE_URL?sslmode=disable down {{.NUMBER}}
 
   run:
     - go run ./cmd/app/main.go
