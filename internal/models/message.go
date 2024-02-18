@@ -24,6 +24,8 @@ const (
 	Created MessageStatus = "created"
 	// Delivered is a message status when it is delivered
 	Delivered MessageStatus = "delivered"
+	// Failed is a message status when it is failed
+	Failed MessageStatus = "failed"
 )
 
 // MessageRequest is a type representing a message request.
@@ -54,6 +56,7 @@ type MessageConsumer struct {
 	Subject string        `json:"subject"`
 	Text    string        `json:"text"`
 	Status  MessageStatus `json:"status"`
+	City    string        `json:"city"`
 }
 
 // MessageEntity is a type representing a message entity.
@@ -65,4 +68,17 @@ type MessageEntity struct {
 	Text          string        `bun:"text,notnull"`
 	Status        MessageStatus `bun:"status,notnull"`
 	UserID        uuid.UUID     `bun:"user_id,notnull"`
+	Type          ContactType   `bun:"type,notnull"`
+	Value         string        `bun:"value,notnull"`
+}
+
+// MessageSend is a type representing a message send.
+type MessageSend struct {
+	ID      uuid.UUID     `bun:"type:uuid,default:uuid_generate_v4()"`
+	Subject string        `bun:"subject,notnull"`
+	Text    string        `bun:"text,notnull"`
+	Status  MessageStatus `bun:"status,notnull"`
+	UserID  uuid.UUID     `bun:"user_id,notnull"`
+	Type    ContactType   `bun:"type,notnull"`
+	Value   string        `bun:"value,notnull"`
 }
