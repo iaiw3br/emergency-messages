@@ -1,10 +1,11 @@
-package data
+package queue
 
 import (
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"log"
 	"log/slog"
 	"projects/emergency-messages/internal/consumers"
+	"projects/emergency-messages/internal/models"
 	"time"
 )
 
@@ -53,7 +54,11 @@ func (c *Consumer) Read() {
 			if err == nil {
 				switch *msg.TopicPartition.Topic {
 				case EventTypeSend:
-					c.messageConsumer.Read(msg.Value)
+					c.messageConsumer.Send(msg.Value)
+				case EventTypeDelivered:
+					c.messageConsumer.UpdateMessageStatus(msg.Value, models.Delivered)
+				case EventTypeFailed:
+					c.messageConsumer.UpdateMessageStatus(msg.Value, models.Failed)
 				}
 				c.log.Info("Message on %s: %s\n", msg.TopicPartition, string(msg.Value))
 			} else {

@@ -28,7 +28,7 @@ func TestTemplate_Create(t *testing.T) {
 	ctx := context.Background()
 	service := mock_controllers.NewMockTemplateService(controller)
 
-	t.Run("when data is valid then no error", func(t *testing.T) {
+	t.Run("when queue is valid then no error", func(t *testing.T) {
 		// Prepare the request body
 		body := &templateCreate{
 			Subject: "SomeValidSubject",
@@ -173,7 +173,7 @@ func TestTemplate_Update(t *testing.T) {
 	ctx := context.Background()
 	service := mock_controllers.NewMockTemplateService(controller)
 
-	t.Run("when data is valid then no error", func(t *testing.T) {
+	t.Run("when queue is valid then no error", func(t *testing.T) {
 		// Prepare the request body
 		body := &templateUpdate{
 			Subject: "SomeValidSubject",
@@ -318,7 +318,7 @@ func TestTemplate_Delete(t *testing.T) {
 
 	ctx := context.Background()
 
-	t.Run("when data is valid then no error", func(t *testing.T) {
+	t.Run("when queue is valid then no error", func(t *testing.T) {
 		id := "7d603549-b079-4016-b81e-9e4386c1de21"
 
 		service.EXPECT().

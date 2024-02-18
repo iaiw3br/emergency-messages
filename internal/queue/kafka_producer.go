@@ -1,4 +1,4 @@
-package data
+package queue
 
 import (
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
@@ -30,6 +30,16 @@ func (p *Producer) Send(messageBytes []byte) error {
 	return p.send(EventTypeSend, messageBytes)
 }
 
+// Delivered sends a message to the kafka topic
+func (p *Producer) Delivered(messageID []byte) error {
+	return p.send(EventTypeDelivered, messageID)
+}
+
+// Failed sends a message to the kafka topic
+func (p *Producer) Failed(messageID []byte) error {
+	return p.send(EventTypeFailed, messageID)
+}
+
 // Close closes the producer
 func (p *Producer) Close() {
 	p.producer.Close()
@@ -42,11 +52,11 @@ func (p *Producer) send(eventType EventType, value []byte) error {
 			switch ev := e.(type) {
 			case *kafka.Message:
 				if ev.TopicPartition.Error != nil {
-					p.log.With(slog.Any("message", string(value))).
+					p.log.With(slog.Any("value", string(value))).
 						Error("Delivery failed", ev.TopicPartition.Error)
 				} else {
 					p.log.With(
-						slog.Any("message", string(value)),
+						slog.Any("value", string(value)),
 						slog.Any("topic", ev.TopicPartition)).
 						Debug("Delivered message")
 				}

@@ -52,7 +52,7 @@ func (t *template) Create(ctx context.Context, req *api.CreateRequest) (*api.Emp
 	}
 	if err := t.templateService.Create(ctx, newTemplate); err != nil {
 		if errors.Is(err, errorx.ErrValidation) {
-			return nil, status.Error(codes.InvalidArgument, "invalid input data")
+			return nil, status.Error(codes.InvalidArgument, "invalid input queue")
 		}
 		return nil, status.Error(codes.Internal, "error while creating")
 	}
@@ -67,7 +67,7 @@ func (t *template) Update(ctx context.Context, req *api.UpdateRequest) (*api.Emp
 	if err := t.templateService.Update(ctx, updateTemplate); err != nil {
 		switch {
 		case errors.Is(err, errorx.ErrValidation):
-			return nil, status.Error(codes.InvalidArgument, "invalid input data")
+			return nil, status.Error(codes.InvalidArgument, "invalid input queue")
 		case errors.Is(err, errorx.ErrNotFound):
 			return nil, status.Error(codes.NotFound, "not found")
 		default:
