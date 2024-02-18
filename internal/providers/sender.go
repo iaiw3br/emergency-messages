@@ -6,7 +6,7 @@ import (
 )
 
 type Sender interface {
-	Send(message models.Message, where string) error
+	Send(message models.MessageSend) error
 }
 
 type SendManager struct {
@@ -23,11 +23,11 @@ func (sm *SendManager) AddProvider(provider Sender, cType models.ContactType) {
 	sm.providers[cType] = provider
 }
 
-func (sm *SendManager) Send(message models.Message, contact models.Contact) error {
-	provider := sm.providers[contact.Type]
+func (sm *SendManager) Send(message models.MessageSend) error {
+	provider := sm.providers[message.Type]
 	if provider == nil {
-		return fmt.Errorf("couldn't find provider by type: %s", contact.Type)
+		return fmt.Errorf("couldn't find provider by type: %s", message.Type)
 	}
 
-	return provider.Send(message, contact.Value)
+	return provider.Send(message)
 }

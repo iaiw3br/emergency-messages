@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/robfig/cron/v3"
 	"google.golang.org/grpc"
 	"log"
 	"log/slog"
@@ -12,6 +13,7 @@ import (
 	"os/signal"
 	grpcapp "projects/emergency-messages/internal/app/grpc"
 	"projects/emergency-messages/internal/config"
+	"projects/emergency-messages/internal/consumers"
 	"projects/emergency-messages/internal/controllers"
 	v2 "projects/emergency-messages/internal/controllers/grpc"
 	client "projects/emergency-messages/internal/databases/client/postgres"
@@ -20,9 +22,12 @@ import (
 	"projects/emergency-messages/internal/providers"
 	"projects/emergency-messages/internal/providers/email/mail_gun"
 	"projects/emergency-messages/internal/providers/sms/twil"
+	"projects/emergency-messages/internal/queue"
 	"projects/emergency-messages/internal/router"
+	"projects/emergency-messages/internal/senders"
 	"projects/emergency-messages/internal/services"
 	"projects/emergency-messages/internal/stores/postgres"
+	"projects/emergency-messages/internal/workers"
 	"strconv"
 	"syscall"
 	"time"
@@ -151,24 +156,47 @@ func registerEntities(db *bun.DB, grpcServer *grpc.Server, l *slog.Logger, r *ch
 	templateController := controllers.NewTemplate(&templateService, l)
 	v2.Register(grpcServer, &templateService, l)
 
-	sender := getProviders(l)
+	brokerAddr := os.Getenv("KAFKA_BROKER")
+
+	producer, err := queue.NewProducer(brokerAddr, l)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	messageStore := postgres.NewMessage(db)
-	messageService := services.NewMessage(messageStore, templateStore, userStore, sender, l)
+	messageService := services.NewMessage(producer, templateStore, l)
 	messageController := controllers.NewMessage(messageService, l)
+
+	sender := senders.New(messageStore, userStore, l)
+	messageConsumer := consumers.New(sender, messageStore, l)
+	consumer, err := queue.NewConsumer(brokerAddr, messageConsumer, l)
+	if err != nil {
+		log.Fatal(err)
+	}
+	go consumer.Read()
 
 	routers := router.New(r, messageController, userController, templateController)
 	routers.Load()
+
+	suppliers := getSuppliers(l)
+
+	workerSendMessage := workers.NewSendMessage(messageStore, producer, suppliers, l)
+	c := cron.New(cron.WithChain(cron.SkipIfStillRunning(cron.DefaultLogger)))
+	_, err = c.AddFunc("@every 30s", workerSendMessage.Send)
+	if err != nil {
+		log.Fatal(err)
+	}
+	c.Start()
 }
 
-func getProviders(l *slog.Logger) *providers.SendManager {
-	sender := providers.New()
+func getSuppliers(l *slog.Logger) *providers.SendManager {
+	supplier := providers.New()
 
 	mailg := mail_gun.NewEmailMailgClient(l)
-	sender.AddProvider(mailg, models.ContactTypeEmail)
+	supplier.AddProvider(mailg, models.ContactTypeEmail)
 
 	twilSMS := twil.NewMobileTwilClient(l)
-	sender.AddProvider(twilSMS, models.ContactTypeSMS)
+	supplier.AddProvider(twilSMS, models.ContactTypeSMS)
 
-	return sender
+	return supplier
 }

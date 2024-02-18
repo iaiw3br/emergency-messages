@@ -83,7 +83,7 @@ func TestUserService_Upload(t *testing.T) {
 
 	userService := NewUserService(userStore, log)
 
-	t.Run("when all data have then no error", func(t *testing.T) {
+	t.Run("when all queue have then no error", func(t *testing.T) {
 		userCreate := &models.UserEntity{
 			FirstName: "Robert",
 			LastName:  "Smith",

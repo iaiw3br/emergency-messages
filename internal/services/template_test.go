@@ -23,7 +23,7 @@ func TestTemplate_Create(t *testing.T) {
 	ctx := context.Background()
 	service := NewTemplate(store, log)
 
-	t.Run("when all data have then no error", func(t *testing.T) {
+	t.Run("when all queue have then no error", func(t *testing.T) {
 		template := &models.TemplateCreate{
 			Subject: "1",
 			Text:    "2",
@@ -139,7 +139,7 @@ func TestTemplate_Update(t *testing.T) {
 	ctx := context.Background()
 	store := mock_services.NewMockTemplateStore(controller)
 
-	t.Run("when all data have then no error", func(t *testing.T) {
+	t.Run("when all queue have then no error", func(t *testing.T) {
 		uidStr := "9dfc0a1d-7582-40eb-bc50-53a973bd1dbf"
 		uid, err := uuid.Parse(uidStr)
 		assert.NoError(t, err)

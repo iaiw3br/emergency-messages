@@ -13,14 +13,14 @@ type ClientTwilSMS struct {
 	log *slog.Logger
 }
 
-func (c *ClientTwilSMS) Send(newMessage models.Message, phone string) error {
+func (c *ClientTwilSMS) Send(newMessage models.MessageSend) error {
 	client := twilio.NewRestClientWithParams(twilio.ClientParams{
 		Username: os.Getenv("MOBILE_TWIL_ACCOUNT_SID"),
 		Password: os.Getenv("MOBILE_TWIL_AUTH_TOKEN"),
 	})
 
 	params := &twilioApi.CreateMessageParams{}
-	params.SetTo(phone)
+	params.SetTo(newMessage.Value)
 	params.SetFrom(os.Getenv("MOBILE_PHONE_EMERGENCY_SERVICE"))
 	params.SetBody(newMessage.Text)
 
@@ -28,7 +28,7 @@ func (c *ClientTwilSMS) Send(newMessage models.Message, phone string) error {
 	if err != nil {
 		c.log.With(
 			slog.Any("message", newMessage),
-			slog.String("phone", phone)).
+			slog.String("phone", newMessage.Value)).
 			Error("sending twil message", err)
 		return err
 	}

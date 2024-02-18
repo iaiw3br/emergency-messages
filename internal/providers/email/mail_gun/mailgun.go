@@ -25,17 +25,17 @@ func NewEmailMailgClient(log *slog.Logger) *ClientMailg {
 	}
 }
 
-func (c ClientMailg) message(newMessage models.Message, email string) *mailgun.Message {
+func (c ClientMailg) message(newMessage models.MessageSend) *mailgun.Message {
 	return c.mg.NewMessage(
 		os.Getenv("MAILGUN_FROM"),
 		newMessage.Subject,
 		newMessage.Text,
-		email,
+		newMessage.Value,
 	)
 }
 
-func (c ClientMailg) Send(newMessage models.Message, email string) error {
-	message := c.message(newMessage, email)
+func (c ClientMailg) Send(newMessage models.MessageSend) error {
+	message := c.message(newMessage)
 	_, _, err := c.mg.Send(message)
 	if err != nil {
 		c.log.Error("cannot sending message:", err)

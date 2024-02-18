@@ -22,7 +22,7 @@ func Test_template_Delete(t *testing.T) {
 
 	ctx := context.Background()
 
-	t.Run("when all data is invalid then no error", func(t *testing.T) {
+	t.Run("when all queue is invalid then no error", func(t *testing.T) {
 		req := &api.DeleteRequest{Id: "abc"}
 
 		service.EXPECT().
@@ -75,7 +75,7 @@ func Test_template_Create(t *testing.T) {
 	service := mock_controllers.NewMockTemplateService(controller)
 
 	ctx := context.Background()
-	t.Run("when all data is invalid then no error", func(t *testing.T) {
+	t.Run("when all queue is invalid then no error", func(t *testing.T) {
 		tmpl := &api.CreateRequest{
 			Text:    "321",
 			Subject: "subject",
@@ -119,7 +119,7 @@ func Test_template_Create(t *testing.T) {
 		s, ok := status.FromError(err)
 		assert.Equal(t, true, ok)
 		assert.Equal(t, codes.InvalidArgument, s.Code())
-		assert.Equal(t, "invalid input data", s.Message())
+		assert.Equal(t, "invalid input queue", s.Message())
 	})
 
 	t.Run("when store returns internal error then error", func(t *testing.T) {
@@ -155,7 +155,7 @@ func Test_template_Update(t *testing.T) {
 	service := mock_controllers.NewMockTemplateService(controller)
 
 	ctx := context.Background()
-	t.Run("when all data is valid then no error", func(t *testing.T) {
+	t.Run("when all queue is valid then no error", func(t *testing.T) {
 		tmpl := &api.UpdateRequest{
 			Text:    "321",
 			Subject: "subject",
@@ -176,7 +176,7 @@ func Test_template_Update(t *testing.T) {
 		assert.NotNil(t, resp)
 	})
 
-	t.Run("when all data is invalid then error", func(t *testing.T) {
+	t.Run("when all queue is invalid then error", func(t *testing.T) {
 		tmpl := &api.UpdateRequest{
 			Text:    "321",
 			Subject: "subject",
@@ -199,10 +199,10 @@ func Test_template_Update(t *testing.T) {
 		s, ok := status.FromError(err)
 		assert.Equal(t, true, ok)
 		assert.Equal(t, codes.InvalidArgument, s.Code())
-		assert.Equal(t, "invalid input data", s.Message())
+		assert.Equal(t, "invalid input queue", s.Message())
 	})
 
-	t.Run("when all data is not found then error", func(t *testing.T) {
+	t.Run("when all queue is not found then error", func(t *testing.T) {
 		tmpl := &api.UpdateRequest{
 			Text:    "321",
 			Subject: "subject",
@@ -228,7 +228,7 @@ func Test_template_Update(t *testing.T) {
 		assert.Equal(t, "not found", s.Message())
 	})
 
-	t.Run("when all data is internal error then error", func(t *testing.T) {
+	t.Run("when all queue is internal error then error", func(t *testing.T) {
 		tmpl := &api.UpdateRequest{
 			Text:    "321",
 			Subject: "subject",

@@ -1,24 +1,22 @@
+// Package postgres
+// Description: This file contains the implementation of the message store interface for the postgres database.
 package postgres
 
 import (
 	"context"
 	"database/sql"
 	"fmt"
-
 	"github.com/google/uuid"
-
-	"projects/emergency-messages/internal/models"
-	"projects/emergency-messages/internal/services"
-
 	"github.com/uptrace/bun"
+	"projects/emergency-messages/internal/models"
 )
 
-type messageStore struct {
+type MessageStore struct {
 	db *bun.DB
 }
 
-func NewMessage(db *bun.DB) services.Message {
-	return &messageStore{
+func NewMessage(db *bun.DB) *MessageStore {
+	return &MessageStore{
 		db: db,
 	}
 }
@@ -26,7 +24,7 @@ func NewMessage(db *bun.DB) services.Message {
 // Create creates the struct of a message in the database.
 // It takes in a context, the new struct of the message.
 // It returns an error if the create operation fails.
-func (s *messageStore) Create(ctx context.Context, m *models.MessageEntity) error {
+func (s *MessageStore) Create(ctx context.Context, m *models.MessageEntity) error {
 	_, err := s.db.
 		NewInsert().
 		Model(m).
@@ -40,7 +38,7 @@ func (s *messageStore) Create(ctx context.Context, m *models.MessageEntity) erro
 // UpdateStatus updates the status of a message in the database.
 // It takes in a context, the ID of the message, and the new status.
 // It returns an error if the update operation fails.
-func (s *messageStore) UpdateStatus(ctx context.Context, id uuid.UUID, status models.MessageStatus) error {
+func (s *MessageStore) UpdateStatus(ctx context.Context, id uuid.UUID, status models.MessageStatus) error {
 	exec, err := s.db.
 		NewUpdate().
 		Model(&models.MessageEntity{}).
@@ -58,4 +56,26 @@ func (s *messageStore) UpdateStatus(ctx context.Context, id uuid.UUID, status mo
 		return sql.ErrNoRows
 	}
 	return nil
+}
+
+// FindByStatus retrieves messages from the database by status.
+// It takes in a context and the status of the messages.
+// It returns a slice of message entities and an error if the find operation fails.
+func (s *MessageStore) FindByStatus(ctx context.Context, status models.MessageStatus) ([]models.MessageEntity, error) {
+	entities := make([]models.MessageEntity, 0)
+
+	err := s.db.
+		NewSelect().
+		Model(&entities).
+		Where("status = ?", string(status)).
+		Scan(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("finding messages by status: couldn't find messages by status: %s. Error: %w", status, err)
+	}
+
+	if len(entities) == 0 {
+		return nil, sql.ErrNoRows
+	}
+
+	return entities, nil
 }

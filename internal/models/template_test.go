@@ -39,7 +39,7 @@ func TestTemplateUpdate_Validate(t1 *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "when all data are not empty then no error",
+			name: "when all queue are not empty then no error",
 			fields: fields{
 				ID:      "1",
 				Subject: "1",

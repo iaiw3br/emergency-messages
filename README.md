@@ -38,5 +38,8 @@ sql-queries: uptrace/bun
 - [x] graceful shutdown
 - [x] add grpc
 - [x] remove lorgus, use slog
+- [x] add kafka
+- [x] add worker to send messages to clients
+- [x] add worker to update a message status
 - [ ] send messages by telegram
 - [ ] send messages by what's app

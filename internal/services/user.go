@@ -34,7 +34,7 @@ func NewUserService(userStore User, log *slog.Logger) UserService {
 func (s *UserService) GetByCity(ctx context.Context, city string) ([]models.User, error) {
 	if city == "" {
 		err := errors.New("city is empty")
-		s.log.Error("checking input data", err)
+		s.log.Error("checking input queue", err)
 		return nil, err
 	}
 	usersStore, err := s.userStore.FindByCity(ctx, city)
