@@ -4,8 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/robfig/cron/v3"
-	"google.golang.org/grpc"
 	"log"
 	"log/slog"
 	"net/http"
@@ -17,11 +15,9 @@ import (
 	"projects/emergency-messages/internal/controllers"
 	v2 "projects/emergency-messages/internal/controllers/grpc"
 	client "projects/emergency-messages/internal/databases/client/postgres"
+	"projects/emergency-messages/internal/logging"
 	mdlware "projects/emergency-messages/internal/middlewares"
-	"projects/emergency-messages/internal/models"
 	"projects/emergency-messages/internal/providers"
-	"projects/emergency-messages/internal/providers/email/mail_gun"
-	"projects/emergency-messages/internal/providers/sms/twil"
 	"projects/emergency-messages/internal/queue"
 	"projects/emergency-messages/internal/router"
 	"projects/emergency-messages/internal/senders"
@@ -31,6 +27,9 @@ import (
 	"strconv"
 	"syscall"
 	"time"
+
+	"github.com/robfig/cron/v3"
+	"google.golang.org/grpc"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -67,7 +66,7 @@ func startServer(ctx context.Context) error {
 			Addr:    listenAddr,
 			Handler: r,
 		}
-		logging  = setupLogger()
+		logging  = logging.New()
 		url      = os.Getenv("DATABASE_URL")
 		grpcPort = os.Getenv("GRPC_PORT")
 	)
@@ -119,22 +118,6 @@ func startServer(ctx context.Context) error {
 	return nil
 }
 
-func setupLogger() *slog.Logger {
-	env := os.Getenv("ENV")
-	var log *slog.Logger
-	switch env {
-	case envLocal:
-		log = slog.New(
-			slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}),
-		)
-	default:
-		log = slog.New(
-			slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelError}),
-		)
-	}
-	return log
-}
-
 func registerEntities(db *bun.DB, grpcServer *grpc.Server, l *slog.Logger, r *chi.Mux) {
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
@@ -178,7 +161,7 @@ func registerEntities(db *bun.DB, grpcServer *grpc.Server, l *slog.Logger, r *ch
 	routers := router.New(r, messageController, userController, templateController)
 	routers.Load()
 
-	suppliers := getSuppliers(l)
+	suppliers := providers.New(l)
 
 	workerSendMessage := workers.NewSendMessage(messageStore, producer, suppliers, l)
 	c := cron.New(cron.WithChain(cron.SkipIfStillRunning(cron.DefaultLogger)))
@@ -187,16 +170,4 @@ func registerEntities(db *bun.DB, grpcServer *grpc.Server, l *slog.Logger, r *ch
 		log.Fatal(err)
 	}
 	c.Start()
-}
-
-func getSuppliers(l *slog.Logger) *providers.SendManager {
-	supplier := providers.New()
-
-	mailg := mail_gun.NewEmailMailgClient(l)
-	supplier.AddProvider(mailg, models.ContactTypeEmail)
-
-	twilSMS := twil.NewMobileTwilClient(l)
-	supplier.AddProvider(twilSMS, models.ContactTypeSMS)
-
-	return supplier
 }
