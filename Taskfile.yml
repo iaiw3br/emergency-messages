@@ -21,13 +21,12 @@ tasks:
     cmds:
       - mockgen -source=internal/services/message.go -destination internal/services/mocks/message_mock.go
       - mockgen -source=internal/services/template.go -destination internal/services/mocks/template_mock.go
-      - mockgen -source=internal/services/user.go -destination internal/services/mocks/user_mock.go
+      - mockgen -source=internal/services/receiver.go -destination internal/services/mocks/receiver_mock.go
       - mockgen -source=internal/controllers/template.go -destination internal/controllers/mocks/template_mock.go
 
   protos:
     cmds:
       - cd protos && protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative template.proto
-
 
   ## task migrate-create NAME=some-name
   migrate-create:

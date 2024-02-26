@@ -77,13 +77,13 @@ func (m *Message) transformMessagesStoreToMessages(messagesStore []models.Messag
 	messages := make([]models.MessageSend, 0, len(messagesStore))
 	for _, message := range messagesStore {
 		newMessage := models.MessageSend{
-			ID:      message.ID,
-			Subject: message.Subject,
-			Text:    message.Text,
-			Status:  message.Status,
-			UserID:  message.UserID,
-			Type:    message.Type,
-			Value:   message.Value,
+			ID:         message.ID,
+			Subject:    message.Subject,
+			Text:       message.Text,
+			Status:     message.Status,
+			ReceiverID: message.ReceiverID,
+			Type:       message.Type,
+			Value:      message.Value,
 		}
 		messages = append(messages, newMessage)
 	}

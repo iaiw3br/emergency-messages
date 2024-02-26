@@ -9,11 +9,11 @@ import (
 
 // Message is a type representing a message
 type Message struct {
-	ID      uuid.UUID     `json:"id"`
-	Subject string        `json:"subject"`
-	Text    string        `json:"text"`
-	Status  MessageStatus `json:"status"`
-	UserID  uuid.UUID     `json:"user_id"`
+	ID         uuid.UUID     `json:"id"`
+	Subject    string        `json:"subject"`
+	Text       string        `json:"text"`
+	Status     MessageStatus `json:"status"`
+	ReceiverID uuid.UUID     `json:"receiver_id"`
 }
 
 // MessageStatus is a type representing a message status
@@ -67,18 +67,18 @@ type MessageEntity struct {
 	Subject       string        `bun:"subject,notnull"`
 	Text          string        `bun:"text,notnull"`
 	Status        MessageStatus `bun:"status,notnull"`
-	UserID        uuid.UUID     `bun:"user_id,notnull"`
+	ReceiverID    uuid.UUID     `bun:"receiver_id,notnull"`
 	Type          ContactType   `bun:"type,notnull"`
 	Value         string        `bun:"value,notnull"`
 }
 
 // MessageSend is a type representing a message send.
 type MessageSend struct {
-	ID      uuid.UUID     `bun:"type:uuid,default:uuid_generate_v4()"`
-	Subject string        `bun:"subject,notnull"`
-	Text    string        `bun:"text,notnull"`
-	Status  MessageStatus `bun:"status,notnull"`
-	UserID  uuid.UUID     `bun:"user_id,notnull"`
-	Type    ContactType   `bun:"type,notnull"`
-	Value   string        `bun:"value,notnull"`
+	ID         uuid.UUID     `bun:"type:uuid,default:uuid_generate_v4()"`
+	Subject    string        `bun:"subject,notnull"`
+	Text       string        `bun:"text,notnull"`
+	Status     MessageStatus `bun:"status,notnull"`
+	ReceiverID uuid.UUID     `bun:"receiver_id,notnull"`
+	Type       ContactType   `bun:"type,notnull"`
+	Value      string        `bun:"value,notnull"`
 }

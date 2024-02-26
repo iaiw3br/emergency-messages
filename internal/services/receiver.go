@@ -14,76 +14,76 @@ import (
 const numberOfCSVCells = 7
 const semicolon = ';'
 
-type UserService struct {
-	userStore User
-	log       *slog.Logger
+type ReceiverService struct {
+	receiverStore ReceiverStore
+	log           *slog.Logger
 }
 
-type User interface {
-	Create(ctx context.Context, user *models.UserEntity) error
-	FindByCity(ctx context.Context, city string) ([]models.UserEntity, error)
+type ReceiverStore interface {
+	Create(ctx context.Context, receiver *models.ReceiverEntity) error
+	FindByCity(ctx context.Context, city string) ([]models.ReceiverEntity, error)
 }
 
-func NewUserService(userStore User, log *slog.Logger) UserService {
-	return UserService{
-		userStore: userStore,
-		log:       log,
+func NewReceiverService(receiverStore ReceiverStore, log *slog.Logger) *ReceiverService {
+	return &ReceiverService{
+		receiverStore: receiverStore,
+		log:           log,
 	}
 }
 
-func (s *UserService) GetByCity(ctx context.Context, city string) ([]models.User, error) {
+func (s *ReceiverService) FindByCity(ctx context.Context, city string) ([]models.Receiver, error) {
 	if city == "" {
 		err := errors.New("city is empty")
 		s.log.Error("checking input queue", err)
 		return nil, err
 	}
-	usersStore, err := s.userStore.FindByCity(ctx, city)
+	receiverStore, err := s.receiverStore.FindByCity(ctx, city)
 	if err != nil {
 		s.log.Error("finding by city", err)
 		return nil, err
 	}
 
-	users, err := s.transformStoreModelsByCityToUsers(usersStore)
+	receivers, err := s.transformStoreModelsByCityToReceivers(receiverStore)
 	if err != nil {
-		s.log.Error("transforming store model to user", err)
+		s.log.Error("transforming store model to ReceiverService", err)
 		return nil, err
 	}
 
-	return users, nil
+	return receivers, nil
 }
 
-func (s *UserService) Upload(csvData io.Reader) ([]*models.UserCreate, error) {
+func (s *ReceiverService) Upload(csvData io.Reader) ([]*models.ReceiverCreate, error) {
 	ctx := context.Background()
-	users, err := s.getUsersFromCSV(csvData)
+	receivers, err := s.getReceiversFromCSV(csvData)
 	if err != nil {
-		s.log.Error("getting users from csv", err)
+		s.log.Error("getting receivers from csv", err)
 		return nil, err
 	}
 
-	result := make([]*models.UserCreate, 0, len(users))
+	result := make([]*models.ReceiverCreate, 0, len(receivers))
 
-	for _, user := range users {
-		userStore, err := s.transformUserCreateToStoreModel(user)
+	for _, receiver := range receivers {
+		receiverStoreModel, err := s.transformReceiverCreateToStoreModel(receiver)
 		if err != nil {
-			s.log.Error("transforming user to store model", err)
+			s.log.Error("transforming ReceiverService to store model", err)
 			return nil, err
 		}
-		if err = s.userStore.Create(ctx, userStore); err != nil {
-			s.log.Error("creating user", err)
+		if err = s.receiverStore.Create(ctx, receiverStoreModel); err != nil {
+			s.log.Error("creating ReceiverService", err)
 			return nil, err
 		}
 
-		userCreated, err := s.transformStoreModelToUser(userStore)
+		receiverCreated, err := s.transformStoreModelToReceiver(receiverStoreModel)
 		if err != nil {
-			s.log.Error("transforming store model to user", err)
+			s.log.Error("transforming store model to ReceiverService", err)
 			return nil, err
 		}
-		result = append(result, userCreated)
+		result = append(result, receiverCreated)
 	}
 	return result, nil
 }
 
-func (s *UserService) getUsersFromCSV(csvData io.Reader) ([]*models.UserCreate, error) {
+func (s *ReceiverService) getReceiversFromCSV(csvData io.Reader) ([]*models.ReceiverCreate, error) {
 	csvReader := csv.NewReader(csvData)
 	csvReader.Comma = semicolon
 
@@ -93,7 +93,7 @@ func (s *UserService) getUsersFromCSV(csvData io.Reader) ([]*models.UserCreate, 
 		return nil, err
 	}
 
-	users := make([]*models.UserCreate, 0, len(records))
+	receivers := make([]*models.ReceiverCreate, 0, len(records))
 	for i, v := range records {
 		if len(v) != numberOfCSVCells {
 			return nil, errors.New(fmt.Sprintf("invalid csv file, expect %d cells, have %d cells", numberOfCSVCells, len(v)))
@@ -121,17 +121,17 @@ func (s *UserService) getUsersFromCSV(csvData io.Reader) ([]*models.UserCreate, 
 			continue
 		}
 
-		user := &models.UserCreate{
+		receiver := &models.ReceiverCreate{
 			FirstName: firstName,
 			LastName:  lastName,
 			Contacts:  contacts,
 			City:      v[6],
 		}
 
-		users = append(users, user)
+		receivers = append(receivers, receiver)
 	}
 
-	return users, nil
+	return receivers, nil
 }
 
 func getContacts(v []string) ([]models.Contact, error) {
@@ -167,22 +167,22 @@ func getContacts(v []string) ([]models.Contact, error) {
 	return contacts, nil
 }
 
-func (s *UserService) transformStoreModelsByCityToUsers(usersStore []models.UserEntity) ([]models.User, error) {
-	users := make([]models.User, len(usersStore))
-	for _, u := range usersStore {
-		user := models.User{
+func (s *ReceiverService) transformStoreModelsByCityToReceivers(receiverStore []models.ReceiverEntity) ([]models.Receiver, error) {
+	receivers := make([]models.Receiver, len(receiverStore))
+	for _, u := range receiverStore {
+		receiver := models.Receiver{
 			FirstName: u.FirstName,
 			LastName:  u.LastName,
 			Contacts:  u.Contacts,
 			City:      u.City,
 		}
-		users = append(users, user)
+		receivers = append(receivers, receiver)
 	}
-	return users, nil
+	return receivers, nil
 }
 
-func (s *UserService) transformUserCreateToStoreModel(u *models.UserCreate) (*models.UserEntity, error) {
-	return &models.UserEntity{
+func (s *ReceiverService) transformReceiverCreateToStoreModel(u *models.ReceiverCreate) (*models.ReceiverEntity, error) {
+	return &models.ReceiverEntity{
 		FirstName: u.FirstName,
 		LastName:  u.LastName,
 		Contacts:  u.Contacts,
@@ -190,8 +190,8 @@ func (s *UserService) transformUserCreateToStoreModel(u *models.UserCreate) (*mo
 	}, nil
 }
 
-func (s *UserService) transformStoreModelToUser(u *models.UserEntity) (*models.UserCreate, error) {
-	return &models.UserCreate{
+func (s *ReceiverService) transformStoreModelToReceiver(u *models.ReceiverEntity) (*models.ReceiverCreate, error) {
+	return &models.ReceiverCreate{
 		ID:        u.ID,
 		FirstName: u.FirstName,
 		LastName:  u.LastName,

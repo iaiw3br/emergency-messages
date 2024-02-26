@@ -1,5 +1,4 @@
-CREATE TYPE public.message_status AS ENUM ('created', 'delivered');
-ALTER TYPE public.message_status ADD VALUE 'failed';
+CREATE TYPE public.message_status AS ENUM ('created', 'delivered', 'failed');
 
 ALTER TABLE public.messages
     ADD COLUMN new_status public.message_status;

@@ -130,9 +130,9 @@ func registerEntities(db *bun.DB, grpcServer *grpc.Server, l *slog.Logger, r *ch
 	// processing should be stopped.
 	r.Use(middleware.Timeout(contextTimeout))
 
-	userStore := postgres.NewUserStore(db)
-	userService := services.NewUserService(userStore, l)
-	userController := controllers.NewUser(userService, l)
+	receiverStore := postgres.NewReceiverStore(db)
+	receiverService := services.NewReceiverService(receiverStore, l)
+	receiverController := controllers.NewReceiver(receiverService, l)
 
 	templateStore := postgres.NewTemplate(db)
 	templateService := services.NewTemplate(templateStore, l)
@@ -150,7 +150,7 @@ func registerEntities(db *bun.DB, grpcServer *grpc.Server, l *slog.Logger, r *ch
 	messageService := services.NewMessage(producer, templateStore, l)
 	messageController := controllers.NewMessage(messageService, l)
 
-	sender := senders.New(messageStore, userStore, l)
+	sender := senders.New(messageStore, receiverStore, l)
 	messageConsumer := consumers.New(sender, messageStore, l)
 	consumer, err := queue.NewConsumer(brokerAddr, messageConsumer, l)
 	if err != nil {
@@ -158,7 +158,7 @@ func registerEntities(db *bun.DB, grpcServer *grpc.Server, l *slog.Logger, r *ch
 	}
 	go consumer.Read()
 
-	routers := router.New(r, messageController, userController, templateController)
+	routers := router.New(r, messageController, receiverController, templateController)
 	routers.Load()
 
 	suppliers := providers.New(l)
