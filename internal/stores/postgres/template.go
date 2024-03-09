@@ -26,6 +26,8 @@ func NewTemplate(db *bun.DB) services.TemplateStore {
 // It takes in a context, the new struct of the template.
 // It returns an error if the create operation fails.
 func (s *templateStore) Create(ctx context.Context, t *models.TemplateEntity) error {
+	now := time.Now()
+	t.CreatedAt = &now
 	_, err := s.db.
 		NewInsert().
 		Model(t).
