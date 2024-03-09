@@ -2,6 +2,7 @@ package workers
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"log/slog"
 	"projects/emergency-messages/internal/models"
@@ -41,6 +42,10 @@ func (m *Message) Send() {
 	fmt.Println("send worker")
 	messagesStore, err := m.messageStore.FindByStatus(context.Background(), models.Created)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			m.log.Debug("nothing to send")
+			return
+		}
 		m.log.Error("finding messages by status", err)
 		return
 	}
@@ -52,20 +57,14 @@ func (m *Message) Send() {
 	}
 
 	// TODO: send message N times with timeout if failed and then update status to failed
-	for i, message := range messages {
+	for _, message := range messages {
 		b := []byte(message.ID.String())
-		if i%2 == 0 {
-			if err = m.producer.Failed(b); err != nil {
+		if err = m.sender.Send(message); err != nil {
+			if err = m.producer.Failed(message.ID.NodeID()); err != nil {
 				m.log.Error("sending failed message", err)
 			}
 			continue
 		}
-		// if err = m.sender.Send(message); err != nil {
-		// 	if err = m.producer.Failed(message.ID.NodeID()); err != nil {
-		// 		m.log.Error("sending failed message", err)
-		// 	}
-		// 	continue
-		// }
 
 		if err = m.producer.Delivered(b); err != nil {
 			m.log.Error("sending delivered message", err)
