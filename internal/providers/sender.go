@@ -2,7 +2,10 @@ package providers
 
 import (
 	"fmt"
+	"log/slog"
 	"projects/emergency-messages/internal/models"
+	"projects/emergency-messages/internal/providers/email/mail_gun"
+	"projects/emergency-messages/internal/providers/sms/twil"
 )
 
 type Sender interface {
@@ -13,13 +16,21 @@ type SendManager struct {
 	providers map[models.ContactType]Sender
 }
 
-func New() *SendManager {
+func New(l *slog.Logger) *SendManager {
+	mailg := mail_gun.NewEmailMailgClient(l)
+	twilSMS := twil.NewMobileTwilClient(l)
+
+	suppliers := map[models.ContactType]Sender{
+		models.ContactTypeEmail: mailg,
+		models.ContactTypeSMS:   twilSMS,
+	}
+
 	return &SendManager{
-		providers: make(map[models.ContactType]Sender),
+		providers: suppliers,
 	}
 }
 
-func (sm *SendManager) AddProvider(provider Sender, cType models.ContactType) {
+func (sm *SendManager) addProvider(provider Sender, cType models.ContactType) {
 	sm.providers[cType] = provider
 }
 

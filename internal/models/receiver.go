@@ -5,7 +5,7 @@ import (
 	"github.com/uptrace/bun"
 )
 
-type User struct {
+type Receiver struct {
 	ID        uuid.UUID `json:"id"`
 	FirstName string    `json:"first_name"`
 	LastName  string    `json:"last_name"`
@@ -34,7 +34,7 @@ const (
 	ContactTypeSMS   ContactType = "sms"
 )
 
-type UserCreate struct {
+type ReceiverCreate struct {
 	ID        uuid.UUID `json:"id"`
 	FirstName string    `json:"first_name"`
 	LastName  string    `json:"last_name"`
@@ -42,8 +42,8 @@ type UserCreate struct {
 	City      string    `json:"city"`
 }
 
-type UserEntity struct {
-	bun.BaseModel `bun:"table:users,alias:u"`
+type ReceiverEntity struct {
+	bun.BaseModel `bun:"table:receivers,alias:u"`
 	ID            uuid.UUID `bun:"type:uuid,default:uuid_generate_v4()"`
 	FirstName     string    `bun:"first_name,notnull"`
 	LastName      string    `bun:"last_name,notnull"`
@@ -51,6 +51,6 @@ type UserEntity struct {
 	City          string    `bun:"city,notnull"`
 }
 
-type UserSend struct {
+type ReceiverSend struct {
 	ID uuid.UUID `json:"id"`
 }

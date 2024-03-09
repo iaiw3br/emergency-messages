@@ -2,7 +2,7 @@
 
 ## Emergency Service
 
-This system is your trusty and reliable aid designed to keep users safe and informed during emergencies. 
+This system is your trusty and reliable aid designed to keep receivers safe and informed during emergencies. 
 It promptly sends messages by SMS, Emails about on-going incidents and safety tips, ensuring everyone stays in the loop with live updates. 
 Never feel unprepared with our Emergency Service Notification System at hand!
 
@@ -44,5 +44,6 @@ sql-queries: uptrace/bun
 - [x] add kafka
 - [x] add worker to send messages to clients
 - [x] add worker to update a message status
+- [ ] add parser from forecasting service (gismeteo)
 - [ ] send messages by telegram
 - [ ] send messages by what's app

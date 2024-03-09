@@ -4,14 +4,13 @@ import (
 	"context"
 	"errors"
 	"github.com/google/uuid"
+	"github.com/stretchr/testify/assert"
+	"go.uber.org/mock/gomock"
 	"log/slog"
 	"os"
 	"projects/emergency-messages/internal/models"
 	"projects/emergency-messages/internal/services/mocks"
 	"testing"
-
-	"github.com/stretchr/testify/assert"
-	"go.uber.org/mock/gomock"
 )
 
 func TestTemplate_Create(t *testing.T) {

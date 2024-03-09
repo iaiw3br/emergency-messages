@@ -13,15 +13,15 @@ const (
 type Router struct {
 	router   *chi.Mux
 	message  *controllers.Message
-	user     *controllers.User
+	receiver *controllers.Receiver
 	template *controllers.Template
 }
 
-func New(router *chi.Mux, message *controllers.Message, user *controllers.User, template *controllers.Template) Router {
+func New(router *chi.Mux, message *controllers.Message, receiver *controllers.Receiver, template *controllers.Template) Router {
 	return Router{
 		router:   router,
 		message:  message,
-		user:     user,
+		receiver: receiver,
 		template: template,
 	}
 }
@@ -39,9 +39,9 @@ func (r Router) Load() {
 				router.Patch("/", r.template.Update)
 			})
 		})
-		router.Route("/users", func(router chi.Router) {
-			router.Get("/city/:city", r.user.GetByCity)
-			router.Post("/upload", r.user.Upload)
+		router.Route("/receivers", func(router chi.Router) {
+			router.Get("/city/:city", r.receiver.GetByCity)
+			router.Post("/upload", r.receiver.Upload)
 		})
 	})
 }

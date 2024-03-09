@@ -17,13 +17,13 @@ import (
 )
 
 const (
-	dbUser     = "postgres"
+	dbReceiver = "postgres"
 	dbPassword = "postgres"
 	dbName     = "test_db"
 )
 
 var (
-	dbURL = fmt.Sprintf("postgres://%s:%s@localhost:5432/%s", dbUser, dbPassword, dbName)
+	dbURL = fmt.Sprintf("postgres://%s:%s@localhost:5432/%s", dbReceiver, dbPassword, dbName)
 	db    *bun.DB
 )
 

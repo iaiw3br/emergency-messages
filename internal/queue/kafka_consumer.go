@@ -60,7 +60,7 @@ func (c *Consumer) Read() {
 				case EventTypeFailed:
 					c.messageConsumer.UpdateMessageStatus(msg.Value, models.Failed)
 				}
-				c.log.Info("Message on %s: %s\n", msg.TopicPartition, string(msg.Value))
+				c.log.Info("Message on %s: %s\n", *msg.TopicPartition.Topic, string(msg.Value))
 			} else {
 				if !err.(kafka.Error).IsTimeout() {
 					c.log.Info("Consumer error: %v (%v)\n", err, msg)

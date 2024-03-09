@@ -5,7 +5,6 @@ package consumers
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"github.com/google/uuid"
 	"log/slog"
 	"projects/emergency-messages/internal/models"
@@ -50,8 +49,6 @@ func (c *Consumer) Send(messageBytes []byte) {
 
 // UpdateMessageStatus updates the status of the message
 func (c *Consumer) UpdateMessageStatus(messageBytesID []byte, status models.MessageStatus) {
-	fmt.Println("UpdateMessageStatus", string(messageBytesID), status)
-
 	messageID, err := uuid.Parse(string(messageBytesID))
 	if err != nil {
 		c.log.With(slog.Any("message id", string(messageBytesID))).

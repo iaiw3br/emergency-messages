@@ -14,78 +14,78 @@ import (
 )
 
 type Sender struct {
-	messageStore MessageCreator
-	userStore    UserFinder
-	log          *slog.Logger
+	messageStore  MessageCreator
+	receiverStore ReceiverFinder
+	log           *slog.Logger
 }
 
 type MessageCreator interface {
 	Create(ctx context.Context, m *models.MessageEntity) error
 }
 
-type UserFinder interface {
-	FindByCity(ctx context.Context, city string) ([]models.UserEntity, error)
+type ReceiverFinder interface {
+	FindByCity(ctx context.Context, city string) ([]models.ReceiverEntity, error)
 }
 
-func New(messageStore MessageCreator, userStore UserFinder, log *slog.Logger) *Sender {
+func New(messageStore MessageCreator, receiverStore ReceiverFinder, log *slog.Logger) *Sender {
 	return &Sender{
-		messageStore: messageStore,
-		userStore:    userStore,
-		log:          log,
+		messageStore:  messageStore,
+		receiverStore: receiverStore,
+		log:           log,
 	}
 
 }
 
 func (s *Sender) Send(message models.MessageConsumer) error {
-	usersStore, err := s.userStore.FindByCity(context.Background(), message.City)
+	receiverStore, err := s.receiverStore.FindByCity(context.Background(), message.City)
 	if err != nil {
-		// if we don't find any users, we don't return an error
+		// if we don't find any receivers, we don't return an error
 		if errors.Is(err, errorx.ErrNotFound) {
 			return nil
 		}
 		s.log.With(slog.Any("city", message.City)).
-			Error("finding users by city", err)
+			Error("finding receivers by city", err)
 		return err
 	}
-	users, err := s.transformUsersStoreToUsers(usersStore)
+	receivers, err := s.transformReceiversStoreToReceivers(receiverStore)
 	if err != nil {
-		s.log.Error("transforming users store to users", err)
+		s.log.Error("transforming receivers store to receivers", err)
 		return err
 	}
 
-	usersCh := make(chan *models.User, len(users))
+	receiversCh := make(chan *models.Receiver, len(receivers))
 	var wg sync.WaitGroup
 	for i := 0; i < runtime.NumCPU(); i++ {
 		wg.Add(1)
-		go s.send(context.Background(), usersCh, message, &wg)
+		go s.send(context.Background(), receiversCh, message, &wg)
 	}
 
-	go writeUsersToChannel(users, usersCh)
+	go writeReceiversToChannel(receivers, receiversCh)
 	wg.Wait()
 
 	return nil
 }
 
-// writeUsersToChannel writes users to the channel
-func writeUsersToChannel(users []*models.User, usersCh chan<- *models.User) {
-	for _, u := range users {
-		usersCh <- u
+// writeReceiversToChannel writes receivers to the channel
+func writeReceiversToChannel(receivers []*models.Receiver, receiversCh chan<- *models.Receiver) {
+	for _, u := range receivers {
+		receiversCh <- u
 	}
-	close(usersCh)
+	close(receiversCh)
 }
 
-// send sends the message to the users
-func (s *Sender) send(ctx context.Context, usersCh <-chan *models.User, message models.MessageConsumer, wg *sync.WaitGroup) {
+// send sends the message to the receivers
+func (s *Sender) send(ctx context.Context, receiversCh <-chan *models.Receiver, message models.MessageConsumer, wg *sync.WaitGroup) {
 	defer wg.Done()
-	for user := range usersCh {
-		for _, contact := range user.Contacts {
+	for receiver := range receiversCh {
+		for _, contact := range receiver.Contacts {
 			if !contact.IsActive {
 				continue
 			}
-			newMessage, err := s.transformMessageToStoreModel(message, user.ID, contact)
+			newMessage, err := s.transformMessageToStoreModel(message, receiver.ID, contact)
 			newMessage.ID = uuid.New()
 			if err != nil {
-				s.log.With(slog.Any("message", message), slog.Any("user_id", user.ID)).
+				s.log.With(slog.Any("message", message), slog.Any("receiver_id", receiver.ID)).
 					Error("transforming message to store model", err)
 				continue
 			}
@@ -99,29 +99,29 @@ func (s *Sender) send(ctx context.Context, usersCh <-chan *models.User, message 
 	}
 }
 
-func (s *Sender) transformMessageToStoreModel(m models.MessageConsumer, userID uuid.UUID, contact models.Contact) (*models.MessageEntity, error) {
+func (s *Sender) transformMessageToStoreModel(m models.MessageConsumer, receiverID uuid.UUID, contact models.Contact) (*models.MessageEntity, error) {
 	storeModel := &models.MessageEntity{
-		Subject: m.Subject,
-		Text:    m.Text,
-		Status:  m.Status,
-		UserID:  userID,
-		Type:    contact.Type,
-		Value:   contact.Value,
+		Subject:    m.Subject,
+		Text:       m.Text,
+		Status:     m.Status,
+		ReceiverID: receiverID,
+		Type:       contact.Type,
+		Value:      contact.Value,
 	}
 	return storeModel, nil
 }
 
-func (s *Sender) transformUsersStoreToUsers(usersStore []models.UserEntity) ([]*models.User, error) {
-	users := make([]*models.User, 0, len(usersStore))
-	for _, u := range usersStore {
-		user := &models.User{
+func (s *Sender) transformReceiversStoreToReceivers(receiversStore []models.ReceiverEntity) ([]*models.Receiver, error) {
+	results := make([]*models.Receiver, 0, len(receiversStore))
+	for _, u := range receiversStore {
+		receiver := &models.Receiver{
 			ID:        u.ID,
 			FirstName: u.FirstName,
 			LastName:  u.LastName,
 			Contacts:  u.Contacts,
 			City:      u.City,
 		}
-		users = append(users, user)
+		results = append(results, receiver)
 	}
-	return users, nil
+	return results, nil
 }

@@ -2,7 +2,7 @@
 .vscode
 /files
 
-# files for testing user downloads
+# files for testing receiver downloads
 files
 
 .env

@@ -38,8 +38,7 @@ func (s *TemplateService) Create(ctx context.Context, template *models.TemplateC
 		return errorx.ErrValidation
 	}
 
-	now := time.Now()
-	storeModel, err := s.transformTemplateCreateToStoreModel(template, now)
+	storeModel, err := s.transformTemplateCreateToStoreModel(template)
 	if err != nil {
 		s.log.With(slog.Any("template", template)).
 			Error("transforming template to store model", err)
@@ -103,11 +102,10 @@ func (s *TemplateService) Update(ctx context.Context, template *models.TemplateU
 	return nil
 }
 
-func (s *TemplateService) transformTemplateCreateToStoreModel(t *models.TemplateCreate, now time.Time) (*models.TemplateEntity, error) {
+func (s *TemplateService) transformTemplateCreateToStoreModel(t *models.TemplateCreate) (*models.TemplateEntity, error) {
 	storeModel := &models.TemplateEntity{
 		Subject:   t.Subject,
 		Text:      t.Text,
-		CreatedAt: &now,
 		DeletedAt: nil,
 	}
 	return storeModel, nil
